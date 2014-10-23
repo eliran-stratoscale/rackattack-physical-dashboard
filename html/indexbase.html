@@ -1,0 +1,170 @@
+{% extends "dashboardbase.html" %}
+
+{% block content %}
+<link href="/static/style.css" rel="stylesheet">
+
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            <h3>Hosts</h3>
+            {% block rack %}{% endblock %}
+            <div>
+                <h4>Legend</h4>
+                <p><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</p>
+                <p><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</p>
+                <p><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</p>
+                <p><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</p>
+                <p><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</p>
+                <p><span class="glyphicon glyphicon-remove"></span> DESTROYED</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h3>Allocations</h3>
+            <table class="table">
+                <thead>
+                    <th>State</th>
+                    <th>User</th>
+                    <th>Hosts</th>
+                </thead>
+                <tbody data-bind="foreach: allocations.allocations">
+                    <tr data-bind="css: colorClass()">
+                        <td>
+                            <span data-bind="if: dead()"> DEAD </span>
+                            <span data-bind="if: ! dead() && done()"> DONE </span>
+                            <span data-bind="if: ! dead() && ! done()"> WAIT </span>
+                        </td>
+                        <td data-bind="text: info.user"> </td>
+                        <td data-bind="text: countHosts()"> </td>
+                    </tr>
+                </tbody>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript" src="/realtimewebui/externals/underscore-min.js"></script>
+<script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
+<script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
+<script>
+function setStatus(statusObject)
+{
+    if (!statusObject)
+        return;
+    updateHosts(statusObject);
+    model.allocations.update(statusObject);
+}
+
+var hostsByIndex = {};
+
+function updateHosts(statusObject)
+{
+    for (var i in statusObject.hosts) {
+        var hostObject = statusObject.hosts[i];
+        hostsByIndex[hostObject.index] = hostObject.id;
+        var j = $("#node-"+hostObject.id);
+        var stateHtml;
+        if (hostObject.state == "QUICK_RECLAIMATION_IN_PROGRESS")
+            stateHtml = '<span class="glyphicon glyphicon-backward">';
+        else if (hostObject.state == "SLOW_RECLAIMATION_IN_PROGRESS")
+            stateHtml = '<span class="glyphicon glyphicon-fast-backward">';
+        else if (hostObject.state == "CHECKED_IN")
+            stateHtml = '<span class="glyphicon glyphicon-pause">';
+        else if (hostObject.state == "INAUGURATION_LABEL_PROVIDED")
+            stateHtml = '<span class="glyphicon glyphicon-play">';
+        else if (hostObject.state == "INAUGURATION_DONE")
+            stateHtml = '<span class="glyphicon glyphicon-ok">';
+        else if (hostObject.state == "DESTROYED")
+            stateHtml = '<span class="glyphicon glyphicon-remove">';
+        else
+            stateHtml = "NA";
+        j.html(stateHtml + hostObject.id).
+            removeClass(
+                "allocation-a allocation-b allocation-c allocation-d allocation-e " +
+                "allocation-f allocation-g allocation-h allocation-i allocation-j " +
+                "allocation-k allocation-l allocation-m allocation-n allocation-o " +
+                "allocation-p allocation-q allocation-r allocation-s allocation-t").
+            addClass("machine-idle");
+    }
+}
+
+function Allocation(allocationStatus, letter) {
+    var self = this;
+    self.index = allocationStatus.index;
+    self.info = allocationStatus.allocationInfo;
+    self.allocated = allocationStatus.allocated;
+    self.done = ko.observable(allocationStatus.done);
+    self.dead = ko.observable(allocationStatus.dead);
+    self.letter = letter;
+
+    self.update = function(allocationStatus) {
+        self.done(allocationStatus.done);
+        self.dead(allocationStatus.dead);
+    }
+
+    self.applyClasses = function() {
+        if (self.dead())
+            return;
+        for (var k in self.allocated) {
+            var index = self.allocated[k];
+            var id = hostsByIndex[index];
+            var j = $("#node-" + id);
+            j.removeClass('machine-idle').addClass(self.colorClass());
+        }
+    }
+
+    self.colorClass = function() {
+        return 'allocation-' + self.letter;
+    }
+
+    self.countHosts = function() {
+        return Object.keys(self.allocated).length;
+    };
+}
+
+function AllocationsModel() {
+    var self = this;
+    self.allocations = ko.observableArray([]);
+
+    self._freeLetter = function()
+    {
+        var available = [
+            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'];
+        var used = _.pluck(self.allocations(), 'letter');
+        return _.difference(available, used)[0];
+    };
+
+    self.update = function(statusObject)
+    {
+        var allocationIndices = {};
+        for (var i in statusObject.allocations) {
+            var allocation = statusObject.allocations[i];
+            allocationIndices[allocation.index] = true;
+            if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index))
+                self.allocations.push(new Allocation(allocation, self._freeLetter()));
+            var model = _.find(self.allocations(), function(a){return a.index == allocation.index;});
+            model.update(allocation);
+            model.applyClasses();
+        }
+        var copy = new Array(self.allocations());
+        for (var i in copy) {
+            var model = copy[i];
+            if (!_.contains(_.pluck(statusObject.allocations, 'index'), model.index))
+                self.allocations.remove(model);
+        }
+    };
+}
+
+function Model() {
+    var self = this;
+    self.allocations = new AllocationsModel();
+}
+
+var model = new Model();
+ko.applyBindings(model);
+
+var ui = new RealTimeWebUI();
+ui.register("status", setStatus);
+</script>
+
+{% endblock %}
