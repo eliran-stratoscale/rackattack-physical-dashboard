@@ -11,11 +11,32 @@
             <div>
                 <h4>Legend</h4>
                 <p><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</p>
+                <p>Quick reclaim works using kexecing the inaugurator on the host<p>
                 <p><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</p>
+                <p>
+                    Slow reclaim works by rebooting the server and using PXE to load the inaugurator.
+                    This is slow since a server takes minutes to reboot, plus, more than one reboot
+                    might be required.
+                </p>
                 <p><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</p>
+                <p>
+                    The inaugurator has booted successfully, and is waiting for the command to switch
+                    a rootfs. The current rootfs is being hashed in the background.
+                </p>
                 <p><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</p>
+                <p>
+                    The inaugurator is replacing the rootfs in this host.
+                </p>
                 <p><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</p>
+                <p>
+                    The inaugurator has finished replacing the rootfs. This host was kexeced into
+                    its image, which if not hung, means the test itself is running.
+                </p>
                 <p><span class="glyphicon glyphicon-remove"></span> DESTROYED</p>
+                <p>
+                    A temporary stage, on the road for the host to drop out of the cluster. This
+                    happens if 5 slow reclamations failed on this host
+                </p>
             </div>
         </div>
         <div class="col-md-6">
@@ -140,11 +161,17 @@ function AllocationsModel() {
         for (var i in statusObject.allocations) {
             var allocation = statusObject.allocations[i];
             allocationIndices[allocation.index] = true;
-            if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index))
-                self.allocations.push(new Allocation(allocation, self._freeLetter()));
+            if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index)) {
+                if (!allocation.dead)
+                    self.allocations.push(new Allocation(allocation, self._freeLetter()));
+            }
             var model = _.find(self.allocations(), function(a){return a.index == allocation.index;});
-            model.update(allocation);
-            model.applyClasses();
+            if (allocation.dead)
+                self.allocations.remove(model);
+            else {
+                model.update(allocation);
+                model.applyClasses();
+            }
         }
         var copy = new Array(self.allocations());
         for (var i in copy) {
