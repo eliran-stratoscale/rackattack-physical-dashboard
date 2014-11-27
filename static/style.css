@@ -15,6 +15,21 @@
     background-color: white;
 }
 
+.node-when-allocation-is-hovered {
+  animation: blinker 0.4s cubic-bezier(.5, 0, 1, 1) infinite alternate;  
+  -webkit-animation: blinker 0.4s cubic-bezier(.5, 0, 1, 1) infinite alternate;  
+}
+
+@keyframes blinker {  
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@-webkit-keyframes blinker {  
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
 .allocation-a { background-color: #AA3939 }
 .allocation-b { background-color: #AA6C39 }
 .allocation-c { background-color: #226666 }
