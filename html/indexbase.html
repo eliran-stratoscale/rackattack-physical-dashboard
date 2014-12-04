@@ -40,24 +40,35 @@
             </div>
         </div>
         <div class="col-md-6">
-            <h3>Allocations</h3>
+            <h3>Allocations <span class="badge" data-bind="text: allocations.allocations().length"> </span></h3>
             <table class="table">
                 <thead>
-                    <th>State</th>
-                    <th>User</th>
-                    <th>Hosts</th>
+                    <tr>
+                        <th>Allocation</th>
+                        <th>State</th>
+                    </tr>
                 </thead>
                 <tbody data-bind="foreach: allocations.allocations">
-                    <tr data-bind="css: colorClass(), attr: { allocationIndex: index }" onmouseover="model.mouseOverAllocation(this)" onmouseout="model.mouseOutAllocation(this)">
+                    <tr data-bind="attr: { allocationIndex: index }, event: { mouseover: mouseOver, mouseout: mouseOut }">
                         <td>
-                            <span data-bind="if: dead()"> DEAD </span>
-                            <span data-bind="if: ! dead() && done()"> DONE </span>
-                            <span data-bind="if: ! dead() && ! done()"> WAIT </span>
+                            <div class="media">
+                                <a class="media-left pull-left" href="#">
+                                    <div class="color-swatch" data-bind="text: countHosts(), style: { backgroundColor: color }"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="media-heading" data-bind="text: info.user"> </div>
+                                    <span class="hosts-list" data-bind="text: listHosts()"></span>
+                                </div>
+                            </div>
                         </td>
-                        <td data-bind="text: info.user"> </td>
-                        <td data-bind="text: countHosts()"> </td>
+                        <td>
+                            <span class="label label-danger" data-bind="if: dead()"> DEAD </span>
+                            <span class="label label-primary" data-bind="if: ! dead() && done()"> DONE </span>
+                            <span class="label label-warning" data-bind="if: ! dead() && ! done()"> WAIT </span>
+                        </td>
                     </tr>
                 </tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -67,6 +78,8 @@
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
 <script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
 <script>
+var allocationColors = ["rgb(204, 221, 221)", "rgb(187, 221, 221)", "rgb(204, 238, 238)", "rgb(187, 221, 238)", "rgb(221, 238, 221)", "rgb(221, 238, 238)", "rgb(204, 238, 221)", "rgb(221, 238, 255)", "rgb(187, 221, 204)", "rgb(204, 238, 255)", "rgb(187, 238, 238)", "rgb(204, 204, 221)", "rgb(238, 221, 255)", "rgb(204, 221, 187)", "rgb(170, 221, 221)", "rgb(187, 238, 255)", "rgb(204, 221, 238)", "rgb(187, 238, 221)", "rgb(170, 221, 238)", "rgb(187, 221, 255)", "rgb(221, 238, 204)", "rgb(255, 238, 238)", "rgb(221, 204, 238)", "rgb(238, 238, 204)", "rgb(170, 238, 238)", "rgb(187, 204, 221)", "rgb(204, 238, 204)", "rgb(238, 204, 238)", "rgb(170, 238, 255)", "rgb(170, 221, 204)", "rgb(255, 221, 255)", "rgb(255, 238, 255)", "rgb(187, 204, 204)", "rgb(204, 204, 238)", "rgb(187, 221, 187)", "rgb(170, 221, 255)", "rgb(170, 238, 221)", "rgb(187, 204, 187)", "rgb(187, 238, 204)", "rgb(221, 204, 170)", "rgb(153, 221, 238)", "rgb(238, 204, 170)", "rgb(153, 221, 221)", "rgb(255, 238, 204)", "rgb(221, 221, 170)", "rgb(153, 238, 238)", "rgb(153, 238, 255)", "rgb(187, 204, 238)", "rgb(204, 204, 170)", "rgb(204, 221, 204)", "rgb(170, 204, 204)", "rgb(170, 204, 221)", "rgb(204, 221, 170)", "rgb(255, 204, 170)", "rgb(153, 221, 255)", "rgb(221, 238, 187)", "rgb(153, 238, 221)", "rgb(170, 238, 204)", "rgb(221, 221, 238)", "rgb(170, 221, 187)", "rgb(204, 238, 187)", "rgb(221, 204, 255)", "rgb(238, 204, 255)", "rgb(153, 221, 204)", "rgb(238, 238, 187)", "rgb(221, 255, 255)", "rgb(136, 238, 255)", "rgb(136, 238, 238)", "rgb(204, 255, 255)", "rgb(221, 255, 238)", "rgb(204, 204, 255)", "rgb(136, 221, 238)", "rgb(204, 255, 238)", "rgb(187, 238, 187)", "rgb(187, 221, 170)", "rgb(238, 255, 238)", "rgb(221, 187, 187)", "rgb(136, 221, 221)", "rgb(238, 187, 204)", "rgb(238, 187, 187)", "rgb(170, 204, 187)", "rgb(187, 255, 255)", "rgb(170, 204, 238)", "rgb(221, 187, 204)", "rgb(136, 238, 221)", "rgb(136, 221, 255)", "rgb(153, 238, 204)", "rgb(187, 204, 170)", "rgb(119, 238, 255)", "rgb(255, 238, 187)", "rgb(255, 187, 204)", "rgb(238, 255, 255)", "rgb(187, 255, 238)", "rgb(238, 204, 153)", "rgb(119, 238, 238)", "rgb(255, 187, 187)", "rgb(187, 204, 255)", "rgb(221, 221, 153)", "rgb(221, 204, 153)", "rgb(170, 255, 255)", "rgb(170, 238, 187)", "rgb(255, 204, 153)", "rgb(204, 187, 204)", "rgb(221, 255, 221)", "rgb(153, 221, 187)", "rgb(238, 187, 221)", "rgb(153, 204, 221)", "rgb(255, 187, 221)", "rgb(204, 255, 221)", "rgb(136, 221, 204)", "rgb(170, 255, 238)", "rgb(221, 238, 170)", "rgb(102, 238, 255)", "rgb(153, 204, 204)", "rgb(238, 187, 170)", "rgb(204, 221, 153)", "rgb(119, 221, 238)", "rgb(204, 238, 170)", "rgb(221, 187, 170)", "rgb(119, 238, 221)", "rgb(204, 187, 187)", "rgb(255, 221, 153)", "rgb(255, 255, 238)", "rgb(238, 255, 221)", "rgb(170, 221, 170)", "rgb(238, 238, 255)", "rgb(221, 187, 221)", "rgb(136, 238, 204)", "rgb(153, 255, 255)", "rgb(102, 238, 238)", "rgb(119, 221, 255)", "rgb(238, 238, 170)", "rgb(221, 221, 204)", "rgb(187, 255, 221)", "rgb(255, 187, 170)", "rgb(204, 204, 153)", "rgb(204, 221, 255)", "rgb(119, 221, 221)", "rgb(187, 238, 170)", "rgb(153, 238, 187)"];
+
 function setStatus(statusObject)
 {
     if (!statusObject)
@@ -98,50 +111,45 @@ function updateHosts(statusObject)
             stateHtml = '<span class="glyphicon glyphicon-remove">';
         else
             stateHtml = "NA";
-        j.html(stateHtml + hostObject.id).
-            removeClass(
-                "allocation-a allocation-b allocation-c allocation-d allocation-e " +
-                "allocation-f allocation-g allocation-h allocation-i allocation-j " +
-                "allocation-k allocation-l allocation-m allocation-n allocation-o " +
-                "allocation-p allocation-q allocation-r allocation-s allocation-t").
-            addClass("machine-idle");
+        j.html(stateHtml + " " + hostObject.id).addClass("machine-idle");
     }
 }
 
-function Allocation(allocationStatus, letter) {
+function Allocation(allocationStatus, color) {
     var self = this;
     self.index = allocationStatus.index;
     self.info = allocationStatus.allocationInfo;
     self.allocated = allocationStatus.allocated;
     self.done = ko.observable(allocationStatus.done);
     self.dead = ko.observable(allocationStatus.dead);
-    self.letter = letter;
+    self.color = color;
 
     self.update = function(allocationStatus) {
         self.done(allocationStatus.done);
         self.dead(allocationStatus.dead);
-    }
+    };
 
-    self.applyClasses = function() {
+    self.applyClasses = function () {
         if (self.dead())
             return;
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
             var j = $("#node-" + id);
-            j.removeClass('machine-idle').addClass(self.colorClass());
+            j.removeClass('machine-idle').css({ backgroundColor: self.color });
         }
-    }
-
-    self.colorClass = function() {
-        return 'allocation-' + self.letter;
-    }
+    };
 
     self.countHosts = function() {
         return Object.keys(self.allocated).length;
     };
 
-    self.mouseOver = function() {
+    self.listHosts = function () {
+        var indices = _.values(self.allocated);
+        return _.map(indices, function(index) { return hostsByIndex[index]}).sort().join(", ")
+    };
+
+    self.mouseOver = function () {
         if (self.dead())
             return;
         for (var k in self.allocated) {
@@ -150,7 +158,7 @@ function Allocation(allocationStatus, letter) {
             var j = $("#node-" + id);
             j.addClass("node-when-allocation-is-hovered");
         }
-    }
+    };
 
     self.mouseOut = function() {
         if (self.dead())
@@ -168,13 +176,10 @@ function AllocationsModel() {
     var self = this;
     self.allocations = ko.observableArray([]);
 
-    self._freeLetter = function()
+    self._freeColor = function()
     {
-        var available = [
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'];
-        var used = _.pluck(self.allocations(), 'letter');
-        return _.difference(available, used)[0];
+        var used = _.pluck(self.allocations(), 'color');
+        return _.difference(allocationColors, used)[0];
     };
 
     self.update = function(statusObject)
@@ -185,9 +190,9 @@ function AllocationsModel() {
             allocationIndices[allocation.index] = true;
             if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index)) {
                 if (!allocation.dead)
-                    self.allocations.push(new Allocation(allocation, self._freeLetter()));
+                    self.allocations.push(new Allocation(allocation, self._freeColor()));
             }
-            var model = _.find(self.allocations(), function(a){return a.index == allocation.index;});
+            var model = _.find(self.allocations(), function(a) { return a.index == allocation.index });
             if (allocation.dead)
                 self.allocations.remove(model);
             else {
@@ -218,21 +223,7 @@ function Model() {
         }
         console.log("No such allocation");
         return undefined;
-    }
-
-    self.mouseOverAllocation = function(obj) {
-        var allocation = self._findAllocation(obj);
-        if (allocation === undefined)
-            return;
-        allocation.mouseOver();
-    }
-
-    self.mouseOutAllocation = function(obj) {
-        var allocation = self._findAllocation(obj);
-        if (allocation === undefined)
-            return;
-        allocation.mouseOut();
-    }
+    };
 }
 
 var model = new Model();
