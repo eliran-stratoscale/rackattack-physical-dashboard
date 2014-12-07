@@ -1,14 +1,11 @@
 .machine {
-    width: 200px;
     border-style: solid;
     border-width: 1px;
+    border-color: rgb(204, 204, 204);
     text-align: center;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    margin: 0px;
-    background-color: black;
+    padding: 1px;
+    padding-bottom: 3px;
+    margin: 0;
 }
 
 .machine-idle {
@@ -21,32 +18,42 @@
 }
 
 @keyframes blinker {  
+    from { background-color: white; }
+    to { background-color: inherit; }
+}
+
+@-webkit-keyframes blinker {
     from { opacity: 1; }
     to { opacity: 0; }
 }
-
-@-webkit-keyframes blinker {  
-    from { opacity: 1; }
-    to { opacity: 0; }
+.color-swatch {
+    height: 24px;
+    width: 24px;
+    display: inline-block;
+    color: white;
+    text-align: center;
+    line-height: 24px;
+    font-weight: bold;
 }
-
-.allocation-a { background-color: #AA3939 }
-.allocation-b { background-color: #AA6C39 }
-.allocation-c { background-color: #226666 }
-.allocation-d { background-color: #2D882D }
-.allocation-e { background-color: #FFAAAA }
-.allocation-f { background-color: #FFD1AA }
-.allocation-g { background-color: #669999 }
-.allocation-h { background-color: #88CC88 }
-.allocation-i { background-color: #D46A6A }
-.allocation-j { background-color: #D49A6A }
-.allocation-k { background-color: #407F7F }
-.allocation-l { background-color: #55AA55 }
-.allocation-m { background-color: #801515 }
-.allocation-n { background-color: #804515 }
-.allocation-o { background-color: #0D4D4D }
-.allocation-p { background-color: #116611 }
-.allocation-q { background-color: #550000 }
-.allocation-r { background-color: #552700 }
-.allocation-s { background-color: #003333 }
-.allocation-t { background-color: #004400 }
+.hosts-list {
+    height: 0;
+    opacity: 0;
+    display: block;
+}
+.media-heading {
+    font-weight: bold;
+}
+tr:hover td {
+    background-color: #EEEEEE;
+}
+tr:hover .hosts-list {
+    height: auto;
+    opacity: 1;
+    transition: all 0.3s;
+}
+.badge {
+    vertical-align: middle;
+}
+.table > tbody > tr.allocation-row > td{
+    padding: 4px;
+}

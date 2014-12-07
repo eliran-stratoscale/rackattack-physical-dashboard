@@ -8,65 +8,92 @@
         <div class="col-md-6">
             <h3>Hosts</h3>
             {% block rack %}{% endblock %}
-            <div>
-                <h4>Legend</h4>
-                <p><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</p>
-                <p>Quick reclaim works using kexecing the inaugurator on the host<p>
-                <p><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</p>
-                <p>
-                    Slow reclaim works by rebooting the server and using PXE to load the inaugurator.
-                    This is slow since a server takes minutes to reboot, plus, more than one reboot
-                    might be required.
-                </p>
-                <p><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</p>
-                <p>
-                    The inaugurator has booted successfully, and is waiting for the command to switch
-                    a rootfs. The current rootfs is being hashed in the background.
-                </p>
-                <p><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</p>
-                <p>
-                    The inaugurator is replacing the rootfs in this host.
-                </p>
-                <p><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</p>
-                <p>
-                    The inaugurator has finished replacing the rootfs. This host was kexeced into
-                    its image, which if not hung, means the test itself is running.
-                </p>
-                <p><span class="glyphicon glyphicon-remove"></span> DESTROYED</p>
-                <p>
-                    A temporary stage, on the road for the host to drop out of the cluster. This
-                    happens if 5 slow reclamations failed on this host
-                </p>
+            <p></p>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Legend</h3>
+                </div>
+                <div class="panel-body">
+                    <p><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</p>
+                    <p>Quick reclaim works using kexecing the inaugurator on the host
+                    <p>
+                    <p><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</p>
+                    <p>
+                        Slow reclaim works by rebooting the server and using PXE to load the inaugurator.
+                        This is slow since a server takes minutes to reboot, plus, more than one reboot
+                        might be required.
+                    </p>
+                    <p><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</p>
+                    <p>
+                        The inaugurator has booted successfully, and is waiting for the command to switch
+                        a rootfs. The current rootfs is being hashed in the background.
+                    </p>
+                    <p><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</p>
+                    <p>
+                        The inaugurator is replacing the rootfs in this host.
+                    </p>
+                    <p><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</p>
+                    <p>
+                        The inaugurator has finished replacing the rootfs. This host was kexeced into
+                        its image, which if not hung, means the test itself is running.
+                    </p>
+                    <p><span class="glyphicon glyphicon-remove"></span> DESTROYED</p>
+                    <p>
+                        A temporary stage, on the road for the host to drop out of the cluster. This
+                        happens if 5 slow reclamations failed on this host
+                    </p>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
-            <h3>Allocations</h3>
+            <h3>Allocations <span class="badge" data-bind="text: allocations.allocations().length"> </span></h3>
             <table class="table">
                 <thead>
-                    <th>State</th>
-                    <th>User</th>
-                    <th>Hosts</th>
+                    <tr>
+                        <th>Allocation</th>
+                        <th>State</th>
+                    </tr>
                 </thead>
                 <tbody data-bind="foreach: allocations.allocations">
-                    <tr data-bind="css: colorClass(), attr: { allocationIndex: index }" onmouseover="model.mouseOverAllocation(this)" onmouseout="model.mouseOutAllocation(this)">
+                    <tr data-bind="attr: { allocationIndex: index }, event: { mouseover: mouseOver, mouseout: mouseOut }" class="allocation-row">
                         <td>
-                            <span data-bind="if: dead()"> DEAD </span>
-                            <span data-bind="if: ! dead() && done()"> DONE </span>
-                            <span data-bind="if: ! dead() && ! done()"> WAIT </span>
+                            <div class="media">
+                                <a class="media-left pull-left" href="#">
+                                    <div class="color-swatch" data-bind="text: countHosts(), style: { backgroundColor: color }"></div>
+                                </a>
+                                <div class="media-body">
+                                    <div class="media-heading" data-bind="text: info.user"> </div>
+                                    <span class="hosts-list" data-bind="text: listHosts()"></span>
+                                </div>
+                            </div>
                         </td>
-                        <td data-bind="text: info.user"> </td>
-                        <td data-bind="text: countHosts()"> </td>
+                        <td>
+                            <span class="label label-danger" data-bind="if: dead()"> DEAD </span>
+                            <span class="label label-success" data-bind="if: ! dead() && done()"> DONE </span>
+                            <span class="label label-primary" data-bind="if: ! dead() && ! done()"> WAIT </span>
+                        </td>
                     </tr>
                 </tbody>
+            </table>
         </div>
     </div>
 </div>
 
+<script type="text/html" id="machine-template">
+    <span class="label <%= config.labelClass %>" title="<%= serverName %>">
+        <span class="glyphicon <%= config.iconClass %>"></span>
+        <%= serverName  %>
+    </span>
+
+</script>
 
 <script type="text/javascript" src="/realtimewebui/externals/underscore-min.js"></script>
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
 <script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
+
 <script>
+var allocationColors = ["#f44336","#f44336","#e53935","#d32f2f","#c62828","#b71c1c","#e91e63","#e91e63","#d81b60","#c2185b","#ad1457","#880e4f","#9c27b0","#ba68c8","#ab47bc","#9c27b0","#8e24aa","#7b1fa2","#6a1b9a","#4a148c","#673ab7","#9575cd","#7e57c2","#673ab7","#5e35b1","#512da8","#4527a0","#311b92","#3f51b5","#7986cb","#5c6bc0","#3f51b5","#3949ab","#303f9f","#283593","#1a237e","#2196f3","#2196f3","#1e88e5","#1976d2","#1565c0","#0d47a1","#03a9f4","#03a9f4","#039be5","#0288d1","#0277bd","#01579b","#00bcd4","#00bcd4","#00acc1","#0097a7","#00838f","#006064","#009688","#009688","#00897b","#00796b","#00695c","#004d40","#4caf50","#4caf50","#43a047","#388e3c","#2e7d32","#1b5e20","#8bc34a","#8bc34a","#7cb342","#689f38","#558b2f","#33691e","#cddc39","#afb42b","#9e9d24","#827717","#ffeb3b","#f57f17","#ffc107","#ffa000","#ff8f00","#ff6f00","#ff9800","#ff9800","#fb8c00","#f57c00","#ef6c00","#e65100","#ff5722","#ff5722","#f4511e","#e64a19","#d84315","#bf360c","#795548","#a1887f","#8d6e63","#795548","#6d4c41","#5d4037","#4e342e","#3e2723","#9e9e9e","#9e9e9e","#757575","#616161","#424242","#212121","#607d8b","#78909c","#607d8b","#546e7a","#455a64","#37474f","#263238"];
+
 function setStatus(statusObject)
 {
     if (!statusObject)
@@ -76,81 +103,95 @@ function setStatus(statusObject)
 }
 
 var hostsByIndex = {};
+var stateMap = {
+    "QUICK_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-backward", labelClass: "label-info" },
+    "SLOW_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-fast-backward", labelClass: "label-warning" },
+    "CHECKED_IN":{ iconClass: "glyphicon-pause", labelClass: "label-primary" },
+    "INAUGURATION_LABEL_PROVIDED":{ iconClass: "glyphicon-play", labelClass: "label-primary" },
+    "INAUGURATION_DONE":{ iconClass: "glyphicon-ok", labelClass: "label-success" },
+    "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" }
+};
 
 function updateHosts(statusObject)
 {
+    var template = _.template( $("#machine-template").html() );
+    $(".machine").popover('destroy').each(function() {
+        var serverName = $(this).attr("id").replace(/node-rack\d+-/, "");
+        $(this).html(template({
+            serverName: serverName,
+            config: {
+                iconClass: "glyphicon-ban-circle",
+                labelClass: "label-default"
+            }
+        }))
+    });
+
     for (var i in statusObject.hosts) {
         var hostObject = statusObject.hosts[i];
+        var serverName = hostObject.id.replace(/rack\d+-/, "");
         hostsByIndex[hostObject.index] = hostObject.id;
-        var j = $("#node-"+hostObject.id);
-        var stateHtml;
-        if (hostObject.state == "QUICK_RECLAIMATION_IN_PROGRESS")
-            stateHtml = '<span class="glyphicon glyphicon-backward">';
-        else if (hostObject.state == "SLOW_RECLAIMATION_IN_PROGRESS")
-            stateHtml = '<span class="glyphicon glyphicon-fast-backward">';
-        else if (hostObject.state == "CHECKED_IN")
-            stateHtml = '<span class="glyphicon glyphicon-pause">';
-        else if (hostObject.state == "INAUGURATION_LABEL_PROVIDED")
-            stateHtml = '<span class="glyphicon glyphicon-play">';
-        else if (hostObject.state == "INAUGURATION_DONE")
-            stateHtml = '<span class="glyphicon glyphicon-ok">';
-        else if (hostObject.state == "DESTROYED")
-            stateHtml = '<span class="glyphicon glyphicon-remove">';
-        else
-            stateHtml = "NA";
-        j.html(stateHtml + hostObject.id).
-            removeClass(
-                "allocation-a allocation-b allocation-c allocation-d allocation-e " +
-                "allocation-f allocation-g allocation-h allocation-i allocation-j " +
-                "allocation-k allocation-l allocation-m allocation-n allocation-o " +
-                "allocation-p allocation-q allocation-r allocation-s allocation-t").
-            addClass("machine-idle");
+        var node = $("#node-" + hostObject.id);
+        var data = {
+            serverName: serverName,
+            config: stateMap[hostObject.state]
+        };
+
+        node.html(template(data));
+        node.popover({
+            title: serverName,
+            container: "body",
+            content: hostObject.ipAddress,
+            trigger: "hover",
+            placement: "auto"
+        })
+
     }
 }
 
-function Allocation(allocationStatus, letter) {
+function Allocation(allocationStatus, color) {
     var self = this;
     self.index = allocationStatus.index;
     self.info = allocationStatus.allocationInfo;
     self.allocated = allocationStatus.allocated;
     self.done = ko.observable(allocationStatus.done);
     self.dead = ko.observable(allocationStatus.dead);
-    self.letter = letter;
+    self.color = color;
 
     self.update = function(allocationStatus) {
         self.done(allocationStatus.done);
         self.dead(allocationStatus.dead);
-    }
+    };
 
-    self.applyClasses = function() {
+    self.applyClasses = function () {
         if (self.dead())
             return;
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
-            var j = $("#node-" + id);
-            j.removeClass('machine-idle').addClass(self.colorClass());
+            var elem = $("#node-" + id);
+            elem.removeClass('machine-idle').find(".color-swatch").css({ backgroundColor: self.color });
         }
-    }
-
-    self.colorClass = function() {
-        return 'allocation-' + self.letter;
-    }
+    };
 
     self.countHosts = function() {
         return Object.keys(self.allocated).length;
     };
 
-    self.mouseOver = function() {
+    self.listHosts = function () {
+        var indices = _.values(self.allocated);
+        return _.map(indices, function(index) { return hostsByIndex[index]}).sort().join(", ")
+    };
+
+    self.mouseOver = function () {
         if (self.dead())
             return;
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
-            var j = $("#node-" + id);
-            j.addClass("node-when-allocation-is-hovered");
+            var elem = $("#node-" + id);
+            elem.css({"border-color": self.color, "border-width": "2px"}).addClass("node-when-allocation-is-hovered");
         }
-    }
+    };
 
     self.mouseOut = function() {
         if (self.dead())
@@ -158,8 +199,8 @@ function Allocation(allocationStatus, letter) {
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
-            var j = $("#node-" + id);
-            j.removeClass("node-when-allocation-is-hovered");
+            var elem = $("#node-" + id);
+            elem.css({"border-color": "", "border-width": ""}).removeClass("node-when-allocation-is-hovered");
         }
     }
 }
@@ -168,13 +209,10 @@ function AllocationsModel() {
     var self = this;
     self.allocations = ko.observableArray([]);
 
-    self._freeLetter = function()
+    self._freeColor = function()
     {
-        var available = [
-            'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-            'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't'];
-        var used = _.pluck(self.allocations(), 'letter');
-        return _.difference(available, used)[0];
+        var used = _.pluck(self.allocations(), 'color');
+        return _.difference(allocationColors, used)[0];
     };
 
     self.update = function(statusObject)
@@ -185,9 +223,9 @@ function AllocationsModel() {
             allocationIndices[allocation.index] = true;
             if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index)) {
                 if (!allocation.dead)
-                    self.allocations.push(new Allocation(allocation, self._freeLetter()));
+                    self.allocations.push(new Allocation(allocation, self._freeColor()));
             }
-            var model = _.find(self.allocations(), function(a){return a.index == allocation.index;});
+            var model = _.find(self.allocations(), function(a) { return a.index == allocation.index });
             if (allocation.dead)
                 self.allocations.remove(model);
             else {
@@ -218,21 +256,7 @@ function Model() {
         }
         console.log("No such allocation");
         return undefined;
-    }
-
-    self.mouseOverAllocation = function(obj) {
-        var allocation = self._findAllocation(obj);
-        if (allocation === undefined)
-            return;
-        allocation.mouseOver();
-    }
-
-    self.mouseOutAllocation = function(obj) {
-        var allocation = self._findAllocation(obj);
-        if (allocation === undefined)
-            return;
-        allocation.mouseOut();
-    }
+    };
 }
 
 var model = new Model();

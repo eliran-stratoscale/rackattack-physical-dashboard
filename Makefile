@@ -7,7 +7,7 @@ check_convention:
 	pep8 . --max-line-length=109
 
 test-server:
-	PYTHONPATH=py UPSETO_JOIN_PYTHON_NAMESPACES=yes python py/rackattack/dashboard/main.py --realtimewebuiRoot $(PWD)/../realtimewebui --dashboardRoot $(PWD) --localhostRackattackProvider
+	RACKATTACK_PROVIDER=tcp://rackattack-provider:1014@tcp://rackattack-provider:1015@http://rackattack-provider:1016 PYTHONPATH=py UPSETO_JOIN_PYTHON_NAMESPACES=yes python py/rackattack/dashboard/main.py --realtimewebuiRoot $(PWD)/../realtimewebui --dashboardRoot $(PWD)
 
 test-cli:
 	RACKATTACK_PROVIDER=tcp://localhost:1014@tcp://localhost:1015 PYTHONPATH=py UPSETO_JOIN_PYTHON_NAMESPACES=yes python py/rackattack/dashboard/cli.py
