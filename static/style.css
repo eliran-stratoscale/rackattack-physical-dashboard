@@ -1,14 +1,11 @@
 .machine {
-    width: 200px;
     border-style: solid;
     border-width: 1px;
+    border-color: rgb(204, 204, 204);
     text-align: center;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 1px;
-    padding-bottom: 1px;
-    margin: 0px;
-    background-color: black;
+    padding: 1px;
+    padding-bottom: 3px;
+    margin: 0;
 }
 
 .machine-idle {
@@ -21,11 +18,11 @@
 }
 
 @keyframes blinker {  
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from { background-color: white; }
+    to { background-color: inherit; }
 }
 
-@-webkit-keyframes blinker {  
+@-webkit-keyframes blinker {
     from { opacity: 1; }
     to { opacity: 0; }
 }
@@ -33,9 +30,10 @@
     height: 24px;
     width: 24px;
     display: inline-block;
-    color: black;
+    color: white;
     text-align: center;
     line-height: 24px;
+    font-weight: bold;
 }
 .hosts-list {
     height: 0;
@@ -45,6 +43,9 @@
 .media-heading {
     font-weight: bold;
 }
+tr:hover td {
+    background-color: #EEEEEE;
+}
 tr:hover .hosts-list {
     height: auto;
     opacity: 1;
@@ -52,4 +53,7 @@ tr:hover .hosts-list {
 }
 .badge {
     vertical-align: middle;
+}
+.table > tbody > tr.allocation-row > td{
+    padding: 4px;
 }
