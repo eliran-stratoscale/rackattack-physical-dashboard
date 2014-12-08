@@ -36,22 +36,21 @@
     font-weight: bold;
     border-radius: 4px;
 }
-.hosts-list {
-    height: 0;
-    opacity: 0;
-    display: none;
-}
 .media-heading {
     font-weight: bold;
 }
 tr:hover td {
     background-color: #EEEEEE;
 }
+.hosts-list {
+    max-height: 0;
+    overflow: hidden;
+    margin: 0;
+}
 tr:hover .hosts-list {
-    height: auto;
-    display: block;
-    opacity: 1;
+    max-height: 200px;
     transition: all 0.3s;
+    margin-bottom: 5px;
 }
 .state-column {
     text-align: right;
