@@ -48,7 +48,7 @@ tr:hover td {
     margin: 0;
 }
 tr:hover .hosts-list {
-    max-height: 200px;
+    max-height: 500px;
     transition: all 0.3s;
     margin-bottom: 5px;
 }
