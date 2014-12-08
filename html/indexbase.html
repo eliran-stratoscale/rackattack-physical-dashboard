@@ -63,7 +63,7 @@
                 <thead>
                     <tr>
                         <th>Allocation</th>
-                        <th>State</th>
+                        <th class="state-column">State</th>
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: allocations.allocations">
@@ -98,7 +98,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="state-column">
                             <span class="label label-danger" data-bind="if: dead()"> DEAD </span>
                             <span class="label label-success" data-bind="if: ! dead() && done()"> DONE </span>
                             <span class="label label-primary" data-bind="if: ! dead() && ! done()"> WAIT </span>
@@ -203,6 +203,11 @@ function Allocation(allocationStatus, color) {
     self.dead = ko.observable(allocationStatus.dead);
     self.color = color;
 
+    self._getCopyCommand = function (ipAddress) {
+        var port = 2000 + parseInt(ipAddress.split(".")[3]);
+        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p " + port + " root@rackattack-provider";
+    };
+
     self.update = function(allocationStatus) {
         self.done(allocationStatus.done);
         self.dead(allocationStatus.dead);
@@ -226,7 +231,7 @@ function Allocation(allocationStatus, color) {
     self.listHosts = function () {
         var list = [];
         _.each(self.allocated, function(index, nodeName) {
-            var host = _.findWhere(model.allocations.lastStatus.hosts, {"index": index });
+            var host = _.findWhere(model.allocations.currentStatus.hosts, {"index": index });
             list.push({
                 testName: nodeName,
                 hostname: host.id,
@@ -235,11 +240,6 @@ function Allocation(allocationStatus, color) {
             })
         });
         return _.sortBy(list, "hostname");
-    };
-
-    self._getCopyCommand = function (ipAddress) {
-        var port = 2000 + parseInt(ipAddress.split(".")[3]);
-        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p " + port + " root@rackattack-provider";
     };
 
     self.mouseOver = function () {
@@ -268,7 +268,7 @@ function Allocation(allocationStatus, color) {
 function AllocationsModel() {
     var self = this;
     self.allocations = ko.observableArray([]);
-    self.lastStatus = {};
+    self.currentStatus = {};
 
     self._freeColor = function()
     {
@@ -278,7 +278,7 @@ function AllocationsModel() {
 
     self.update = function(statusObject)
     {
-        self.lastStatus = statusObject;
+        self.currentStatus = statusObject;
         var allocationIndices = {};
         for (var i in statusObject.allocations) {
             var allocation = statusObject.allocations[i];
@@ -310,7 +310,7 @@ function Model() {
     self.hostListViewMode = ko.observable("state");
 
     self.hostListViewMode.subscribe(function(state) {
-        updateHosts(self.allocations.lastStatus);
+        updateHosts(self.allocations.currentStatus);
     });
 
     self.findAllocationByHostIndex = function(hostIndex) {

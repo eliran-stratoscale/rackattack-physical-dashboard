@@ -53,6 +53,9 @@ tr:hover .hosts-list {
     opacity: 1;
     transition: all 0.3s;
 }
+.state-column {
+    text-align: right;
+}
 .badge {
     vertical-align: middle;
 }
