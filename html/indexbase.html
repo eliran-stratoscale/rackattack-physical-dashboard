@@ -7,6 +7,18 @@
     <div class="row">
         <div class="col-md-6">
             <h3>Hosts</h3>
+            <div class="radio-inline">
+                <label>
+                    <input type="radio" name="hostViewOptions" value="state" data-bind="checked: hostListViewMode" >
+                    Show state
+                </label>
+            </div>
+            <div class="radio-inline">
+                <label>
+                    <input type="radio" name="hostViewOptions" value="allocation" data-bind="checked: hostListViewMode" >
+                    Show allocations
+                </label>
+            </div>
             {% block rack %}{% endblock %}
             <p></p>
             <div class="panel panel-default">
@@ -14,30 +26,30 @@
                     <h3 class="panel-title">Legend</h3>
                 </div>
                 <div class="panel-body">
-                    <p><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</p>
+                    <p><span class="label label-info"><span class="glyphicon glyphicon-backward"></span> QUICK_RECLAIMATION_IN_PROGRESS</span></p>
                     <p>Quick reclaim works using kexecing the inaugurator on the host
                     <p>
-                    <p><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</p>
+                    <p><span class="label label-warning"><span class="glyphicon glyphicon-fast-backward"></span> SLOW_RECLAIMATION_IN_PROGRESS</span></p>
                     <p>
                         Slow reclaim works by rebooting the server and using PXE to load the inaugurator.
                         This is slow since a server takes minutes to reboot, plus, more than one reboot
                         might be required.
                     </p>
-                    <p><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</p>
+                    <p><span class="label label-primary"><span class="glyphicon glyphicon-pause"></span> CHECKED_IN</span></p>
                     <p>
                         The inaugurator has booted successfully, and is waiting for the command to switch
                         a rootfs. The current rootfs is being hashed in the background.
                     </p>
-                    <p><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</p>
+                    <p><span class="label label-primary"><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</span></p>
                     <p>
                         The inaugurator is replacing the rootfs in this host.
                     </p>
-                    <p><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</p>
+                    <p><span class="label label-success"><span class="glyphicon glyphicon-ok"></span> INAUGURATION_DONE</span></p>
                     <p>
                         The inaugurator has finished replacing the rootfs. This host was kexeced into
                         its image, which if not hung, means the test itself is running.
                     </p>
-                    <p><span class="glyphicon glyphicon-remove"></span> DESTROYED</p>
+                    <p><span class="label label-danger"><span class="glyphicon glyphicon-remove"></span> DESTROYED</span></p>
                     <p>
                         A temporary stage, on the road for the host to drop out of the cluster. This
                         happens if 5 slow reclamations failed on this host
@@ -63,7 +75,26 @@
                                 </a>
                                 <div class="media-body">
                                     <div class="media-heading" data-bind="text: info.user"> </div>
-                                    <span class="hosts-list" data-bind="text: listHosts()"></span>
+                                    <ul class="hosts-list list-group" data-bind="foreach: listHosts()">
+                                        <li class="list-group-item">
+                                            <span data-bind="text: hostname"></span>
+                                            (<span data-bind="text: testName"></span>)
+                                            <div class="pull-right copy-command">
+                                                <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="110" height="14" id="clippy">
+                                                    <param name="movie" value="/static/clippy.swf"/>
+                                                    <param name="allowScriptAccess" value="always" />
+                                                    <param name="quality" value="high" />
+                                                    <param name="scale" value="noscale" />
+                                                    <param NAME="FlashVars" data-bind="attr: { value: 'text=#' + copyCommand }" >
+                                                    <param name="bgcolor" value="#FFFFFF">
+                                                    <embed data-bind="attr: { FlashVars: 'text=' + copyCommand }" src="/static/clippy.swf" width="110" height="14" name="clippy" quality="high" allowScriptAccess="always" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"  bgcolor="#FFFFFF"/>
+                                                </object>
+                                            </div>
+                                            <span class="badge">
+                                                <span data-bind="text: ip"></span>
+                                            </span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </td>
@@ -79,25 +110,30 @@
     </div>
 </div>
 
-<script type="text/html" id="machine-template">
+<script type="text/html" id="machine-template-state">
     <span class="label <%= config.labelClass %>" title="<%= serverName %>">
         <span class="glyphicon <%= config.iconClass %>"></span>
         <%= serverName  %>
     </span>
-
+</script>
+<script type="text/html" id="machine-template-allocation">
+    <span class="label <%= config.labelClass %>" title="<%= serverName %>" style="background-color: <%= color %>">
+        <span class="glyphicon <%= config.iconClass %>"></span>
+        <%= serverName  %>
+    </span>
 </script>
 
 <script type="text/javascript" src="/realtimewebui/externals/underscore-min.js"></script>
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
 <script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
-
 <script>
-var allocationColors = ["#f44336","#f44336","#e53935","#d32f2f","#c62828","#b71c1c","#e91e63","#e91e63","#d81b60","#c2185b","#ad1457","#880e4f","#9c27b0","#ba68c8","#ab47bc","#9c27b0","#8e24aa","#7b1fa2","#6a1b9a","#4a148c","#673ab7","#9575cd","#7e57c2","#673ab7","#5e35b1","#512da8","#4527a0","#311b92","#3f51b5","#7986cb","#5c6bc0","#3f51b5","#3949ab","#303f9f","#283593","#1a237e","#2196f3","#2196f3","#1e88e5","#1976d2","#1565c0","#0d47a1","#03a9f4","#03a9f4","#039be5","#0288d1","#0277bd","#01579b","#00bcd4","#00bcd4","#00acc1","#0097a7","#00838f","#006064","#009688","#009688","#00897b","#00796b","#00695c","#004d40","#4caf50","#4caf50","#43a047","#388e3c","#2e7d32","#1b5e20","#8bc34a","#8bc34a","#7cb342","#689f38","#558b2f","#33691e","#cddc39","#afb42b","#9e9d24","#827717","#ffeb3b","#f57f17","#ffc107","#ffa000","#ff8f00","#ff6f00","#ff9800","#ff9800","#fb8c00","#f57c00","#ef6c00","#e65100","#ff5722","#ff5722","#f4511e","#e64a19","#d84315","#bf360c","#795548","#a1887f","#8d6e63","#795548","#6d4c41","#5d4037","#4e342e","#3e2723","#9e9e9e","#9e9e9e","#757575","#616161","#424242","#212121","#607d8b","#78909c","#607d8b","#546e7a","#455a64","#37474f","#263238"];
+var allocationColors = ["#ab47bc", "#5c6bc0", "#8d6e63", "#f44336", "#f44336", "#e91e63", "#e91e63", "#9c27b0", "#9c27b0", "#3f51b5", "#3f51b5", "#2196f3", "#2196f3", "#00bcd4", "#00bcd4", "#009688", "#009688", "#4caf50", "#4caf50", "#cddc39", "#ff9800", "#ff9800", "#795548", "#795548", "#e53935", "#d81b60", "#8e24aa", "#3949ab", "#1e88e5", "#00acc1", "#00897b", "#43a047", "#fb8c00", "#6d4c41", "#d32f2f", "#c2185b", "#7b1fa2", "#303f9f", "#1976d2", "#0097a7", "#00796b", "#388e3c", "#afb42b", "#f57c00", "#5d4037", "#c62828", "#ad1457", "#6a1b9a", "#283593", "#1565c0", "#00838f", "#00695c", "#2e7d32", "#9e9d24", "#ef6c00", "#4e342e", "#b71c1c", "#880e4f", "#4a148c", "#1a237e", "#0d47a1", "#006064", "#004d40", "#1b5e20", "#827717", "#e65100", "#3e2723"];
 
 function setStatus(statusObject)
 {
     if (!statusObject)
         return;
+
     updateHosts(statusObject);
     model.allocations.update(statusObject);
 }
@@ -112,35 +148,45 @@ var stateMap = {
     "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" }
 };
 
+
 function updateHosts(statusObject)
 {
-    var template = _.template( $("#machine-template").html() );
+    var viewMode = model.hostListViewMode();
+    var template = _.template( $("#machine-template-" + viewMode).html() );
     $(".machine").popover('destroy').each(function() {
-        var serverName = $(this).attr("id").replace(/node-rack\d+-/, "");
+        var serverName = $(this).attr("id").replace(/node-rack\d+-server/, "");
         $(this).html(template({
             serverName: serverName,
             config: {
                 iconClass: "glyphicon-ban-circle",
-                labelClass: "label-default"
-            }
+                labelClass: "label-default-light"
+            },
+            color: "#b9b9b9"
         }))
     });
 
     for (var i in statusObject.hosts) {
         var hostObject = statusObject.hosts[i];
-        var serverName = hostObject.id.replace(/rack\d+-/, "");
+        var allocation = model.findAllocationByHostIndex(hostObject.index) || {};
+        var serverName = hostObject.id.replace(/rack\d+-server/, "");
         hostsByIndex[hostObject.index] = hostObject.id;
         var node = $("#node-" + hostObject.id);
         var data = {
             serverName: serverName,
-            config: stateMap[hostObject.state]
+            config: stateMap[hostObject.state],
+            color: allocation.color || "#777"
         };
 
+        var nodeName = _.invert(allocation.allocated)[hostObject.index];
+        var content = hostObject.ipAddress;
+        if (nodeName) {
+            content += " (" + nodeName + ")"
+        }
         node.html(template(data));
         node.popover({
-            title: serverName,
+            title: hostObject.id,
             container: "body",
-            content: hostObject.ipAddress,
+            content: content,
             trigger: "hover",
             placement: "auto"
         })
@@ -178,8 +224,22 @@ function Allocation(allocationStatus, color) {
     };
 
     self.listHosts = function () {
-        var indices = _.values(self.allocated);
-        return _.map(indices, function(index) { return hostsByIndex[index]}).sort().join(", ")
+        var list = [];
+        _.each(self.allocated, function(index, nodeName) {
+            var host = _.findWhere(model.allocations.lastStatus.hosts, {"index": index });
+            list.push({
+                testName: nodeName,
+                hostname: host.id,
+                ip: host.ipAddress,
+                copyCommand: self._getCopyCommand(host.ipAddress)
+            })
+        });
+        return _.sortBy(list, "hostname");
+    };
+
+    self._getCopyCommand = function (ipAddress) {
+        var port = 2000 + parseInt(ipAddress.split(".")[3]);
+        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p " + port + " root@rackattack-provider";
     };
 
     self.mouseOver = function () {
@@ -189,7 +249,7 @@ function Allocation(allocationStatus, color) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
             var elem = $("#node-" + id);
-            elem.css({"border-color": self.color, "border-width": "2px"}).addClass("node-when-allocation-is-hovered");
+            elem.addClass("node-when-allocation-is-hovered");
         }
     };
 
@@ -200,7 +260,7 @@ function Allocation(allocationStatus, color) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
             var elem = $("#node-" + id);
-            elem.css({"border-color": "", "border-width": ""}).removeClass("node-when-allocation-is-hovered");
+            elem.removeClass("node-when-allocation-is-hovered");
         }
     }
 }
@@ -208,6 +268,7 @@ function Allocation(allocationStatus, color) {
 function AllocationsModel() {
     var self = this;
     self.allocations = ko.observableArray([]);
+    self.lastStatus = {};
 
     self._freeColor = function()
     {
@@ -217,6 +278,7 @@ function AllocationsModel() {
 
     self.update = function(statusObject)
     {
+        self.lastStatus = statusObject;
         var allocationIndices = {};
         for (var i in statusObject.allocations) {
             var allocation = statusObject.allocations[i];
@@ -245,6 +307,17 @@ function AllocationsModel() {
 function Model() {
     var self = this;
     self.allocations = new AllocationsModel();
+    self.hostListViewMode = ko.observable("state");
+
+    self.hostListViewMode.subscribe(function(state) {
+        updateHosts(self.allocations.lastStatus);
+    });
+
+    self.findAllocationByHostIndex = function(hostIndex) {
+        return _.find(self.allocations.allocations(), function(allocation) {
+            return _.contains(_.values(allocation.allocated), hostIndex);
+        });
+    };
 
     self._findAllocation = function(obj) {
         var allocationIndex = obj.getAttribute('allocationIndex');

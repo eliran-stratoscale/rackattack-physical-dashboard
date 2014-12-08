@@ -34,11 +34,12 @@
     text-align: center;
     line-height: 24px;
     font-weight: bold;
+    border-radius: 4px;
 }
 .hosts-list {
     height: 0;
     opacity: 0;
-    display: block;
+    display: none;
 }
 .media-heading {
     font-weight: bold;
@@ -48,6 +49,7 @@ tr:hover td {
 }
 tr:hover .hosts-list {
     height: auto;
+    display: block;
     opacity: 1;
     transition: all 0.3s;
 }
@@ -56,4 +58,16 @@ tr:hover .hosts-list {
 }
 .table > tbody > tr.allocation-row > td{
     padding: 4px;
+}
+.label-default-light {
+    background-color: #b9b9b9;
+}
+.copy-command {
+    width: 14px;
+    overflow: hidden;
+    margin-left: 5px;
+}
+
+label {
+    font-weight: normal;
 }
