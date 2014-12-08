@@ -77,17 +77,17 @@
                                     <div class="media-heading" data-bind="text: info.user"> </div>
                                     <ul class="hosts-list list-group" data-bind="foreach: listHosts()">
                                         <li class="list-group-item">
-                                            <span data-bind="text: hostname"></span>
-                                            (<span data-bind="text: testName"></span>)
-                                            <div class="pull-right copy-command">
-                                                <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="110" height="14" id="clippy">
+                                            <span class="test-name" data-bind="text: testName"></span> (<span data-bind="text: hostname"></span>)
+                                            <div class="pull-right copy-command" title="Click to copy to the clipboard a connection command to this node">
+                                                <span class="glyphicon glyphicon-circle-arrow-right connect-link"></span>
+                                                <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="110" height="14" id="clippy" class="clippy">
                                                     <param name="movie" value="/static/clippy.swf"/>
                                                     <param name="allowScriptAccess" value="always" />
                                                     <param name="quality" value="high" />
                                                     <param name="scale" value="noscale" />
-                                                    <param NAME="FlashVars" data-bind="attr: { value: 'text=#' + copyCommand }" >
+                                                    <param NAME="FlashVars" data-bind="attr: { value: 'text=' + copyCommand }" >
                                                     <param name="bgcolor" value="#FFFFFF">
-                                                    <embed data-bind="attr: { FlashVars: 'text=' + copyCommand }" src="/static/clippy.swf" width="110" height="14" name="clippy" quality="high" allowScriptAccess="always" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"  bgcolor="#FFFFFF"/>
+                                                    <embed class="clippy" data-bind="attr: { FlashVars: 'text=' + copyCommand }" src="/static/clippy.swf" width="110" height="14" name="clippy" quality="high" allowScriptAccess="always" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"  bgcolor="#FFFFFF"/>
                                                 </object>
                                             </div>
                                             <span class="badge">

@@ -66,11 +66,24 @@ tr:hover .hosts-list {
     background-color: #b9b9b9;
 }
 .copy-command {
-    width: 14px;
+    width: 15px;
     overflow: hidden;
     margin-left: 5px;
+    position: relative;
 }
-
+.clippy {
+    opacity: 0;
+}
+.connect-link {
+    text-transform: uppercase;
+    color: #337ab7;
+    pointer-events:none;
+    position: absolute;
+    left: 0;
+}
+.connect-link:hover{
+    text-decoration: underline;
+}
 label {
     font-weight: normal;
 }
