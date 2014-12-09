@@ -63,7 +63,7 @@
                 <thead>
                     <tr>
                         <th>Allocation</th>
-                        <th class="state-column">State</th>
+                        <th>State</th>
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: allocations.allocations">
@@ -77,9 +77,12 @@
                                     <div class="media-heading" data-bind="text: info.user"> </div>
                                     <ul class="hosts-list list-group" data-bind="foreach: listHosts()">
                                         <li class="list-group-item">
-                                            <span class="test-name" data-bind="text: testName"></span> (<span data-bind="text: hostname"></span>)
-                                            <div class="pull-right copy-command" title="Click to copy to the clipboard a connection command to this node">
-                                                <span class="glyphicon glyphicon-circle-arrow-right connect-link"></span>
+                                            <span class="host-icon " data-bind="css: config.labelClass.replace('label', 'text')">
+                                                <span class="glyphicon" data-bind="css: config.iconClass"></span>
+                                            </span>
+                                            <span class="test-name" data-bind="text: testName"></span> (<span data-bind="text: hostName"></span>)
+                                            <div class="pull-right copy-command" data-bind="if: hostState == 'INAUGURATION_DONE'" title="Click to copy to the clipboard a connection command to this node">
+                                                <span class="glyphicon glyphicon-circle-arrow-right connect-link" ></span>
                                                 <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="110" height="14" id="clippy" class="clippy">
                                                     <param name="movie" value="/static/clippy.swf"/>
                                                     <param name="allowScriptAccess" value="always" />
@@ -99,9 +102,15 @@
                             </div>
                         </td>
                         <td class="state-column">
-                            <span class="label label-danger" data-bind="if: dead()"> DEAD </span>
-                            <span class="label label-success" data-bind="if: ! dead() && done()"> DONE </span>
-                            <span class="label label-primary" data-bind="if: ! dead() && ! done()"> WAIT </span>
+                            <div data-bind="if: dead()">
+                                <span class="label label-danger"> DEAD </span>
+                            </div>
+                            <div data-bind="if: ! dead() && done()">
+                                <span class="label label-success" > DONE </span>
+                            </div>
+                            <div data-bind="if: ! dead() && ! done()">
+                                <span class="label label-primary" > WAIT </span>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
@@ -228,19 +237,21 @@ function Allocation(allocationStatus, color) {
         return Object.keys(self.allocated).length;
     };
 
-    self.listHosts = function () {
+    self.listHosts = ko.computed(function () {
         var list = [];
         _.each(self.allocated, function(index, nodeName) {
-            var host = _.findWhere(model.allocations.currentStatus.hosts, {"index": index });
+            var host = _.findWhere(model.allocations.currentStatus().hosts, {"index": index });
             list.push({
                 testName: nodeName,
-                hostname: host.id,
+                hostName: host.id,
+                hostState: host.state,
                 ip: host.ipAddress,
+                config: stateMap[host.state],
                 copyCommand: self._getCopyCommand(host.ipAddress)
             })
         });
-        return _.sortBy(list, "hostname");
-    };
+        return _.sortBy(list, "hostName");
+    });
 
     self.mouseOver = function () {
         if (self.dead())
@@ -268,7 +279,7 @@ function Allocation(allocationStatus, color) {
 function AllocationsModel() {
     var self = this;
     self.allocations = ko.observableArray([]);
-    self.currentStatus = {};
+    self.currentStatus = ko.observable({});
 
     self._freeColor = function()
     {
@@ -278,7 +289,7 @@ function AllocationsModel() {
 
     self.update = function(statusObject)
     {
-        self.currentStatus = statusObject;
+        self.currentStatus(statusObject);
         var allocationIndices = {};
         for (var i in statusObject.allocations) {
             var allocation = statusObject.allocations[i];
@@ -310,7 +321,7 @@ function Model() {
     self.hostListViewMode = ko.observable("state");
 
     self.hostListViewMode.subscribe(function(state) {
-        updateHosts(self.allocations.currentStatus);
+        updateHosts(self.allocations.currentStatus());
     });
 
     self.findAllocationByHostIndex = function(hostIndex) {
