@@ -36,12 +36,14 @@
     font-weight: bold;
     border-radius: 4px;
 }
-.media-heading {
+tr:hover .media-heading {
     font-weight: bold;
 }
+
 tr:hover td {
     background-color: #EEEEEE;
 }
+
 .hosts-list {
     max-height: 0;
     overflow: hidden;
