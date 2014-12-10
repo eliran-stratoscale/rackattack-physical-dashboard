@@ -6,10 +6,16 @@
     padding: 1px;
     padding-bottom: 3px;
     margin: 0;
+    min-width: 110px;
 }
 
 .machine-idle {
     background-color: white;
+}
+
+.machine-label {
+    padding-left: 2.5em;
+    padding-right: 2.5em;
 }
 
 .node-when-allocation-is-hovered {

@@ -5,7 +5,7 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-md-6">
+        <div class="col-md-7">
             <h3>Hosts</h3>
             <div class="radio-inline">
                 <label>
@@ -40,7 +40,7 @@
                         The inaugurator has booted successfully, and is waiting for the command to switch
                         a rootfs. The current rootfs is being hashed in the background.
                     </p>
-                    <p><span class="label label-primary"><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</span></p>
+                    <p><span class="label label-info"><span class="glyphicon glyphicon-play"></span> INAUGURATION_LABEL_PROVIDED</span></p>
                     <p>
                         The inaugurator is replacing the rootfs in this host.
                     </p>
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-5">
             <h3>Allocations <span class="badge" data-bind="text: allocations.allocations().length"> </span></h3>
             <table class="table">
                 <thead>
@@ -120,13 +120,13 @@
 </div>
 
 <script type="text/html" id="machine-template-state">
-    <span class="label <%= config.labelClass %>">
+    <span class="label <%= config.labelClass %> machine-label">
         <span class="glyphicon <%= config.iconClass %>"></span>
         <%= serverName  %>
     </span>
 </script>
 <script type="text/html" id="machine-template-allocation">
-    <span class="label <%= config.labelClass %>" style="background-color: <%= color %>">
+    <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
         <span class="glyphicon <%= config.iconClass %>"></span>
         <%= serverName  %>
     </span>
@@ -152,7 +152,7 @@ var stateMap = {
     "QUICK_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-backward", labelClass: "label-info" },
     "SLOW_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-fast-backward", labelClass: "label-warning" },
     "CHECKED_IN":{ iconClass: "glyphicon-pause", labelClass: "label-primary" },
-    "INAUGURATION_LABEL_PROVIDED":{ iconClass: "glyphicon-play", labelClass: "label-primary" },
+    "INAUGURATION_LABEL_PROVIDED":{ iconClass: "glyphicon-play", labelClass: "label-info" },
     "INAUGURATION_DONE":{ iconClass: "glyphicon-ok", labelClass: "label-success" },
     "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" }
 };
