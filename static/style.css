@@ -3,19 +3,15 @@
     border-width: 1px;
     border-color: rgb(204, 204, 204);
     text-align: center;
-    padding: 1px;
-    padding-bottom: 3px;
+    padding: 3px;
     margin: 0;
-    min-width: 110px;
+}
+.machine .label {
+    display: block;
 }
 
 .machine-idle {
     background-color: white;
-}
-
-.machine-label {
-    padding-left: 2.5em;
-    padding-right: 2.5em;
 }
 
 .node-when-allocation-is-hovered {
@@ -42,11 +38,11 @@
     font-weight: bold;
     border-radius: 4px;
 }
-tr:hover .media-heading {
+tr.hover .media-heading {
     font-weight: bold;
 }
 
-tr:hover td {
+tr.hover td {
     background-color: #EEEEEE;
 }
 
@@ -55,7 +51,7 @@ tr:hover td {
     overflow: hidden;
     margin: 0;
 }
-tr:hover .hosts-list {
+tr.hover .hosts-list {
     max-height: 500px;
     transition: all 0.3s;
     margin-bottom: 5px;
@@ -82,23 +78,18 @@ tr:hover .hosts-list {
     margin-left: 5px;
     position: relative;
 }
-.clippy {
-    opacity: 0;
-    display: none;
-}
-tr:hover .clippy {
-    display: block;
-}
+
 .connect-link {
     text-transform: uppercase;
     color: #337ab7;
-    pointer-events:none;
+    cursor: pointer;
     position: absolute;
     left: 0;
 }
-.connect-link:hover{
-    text-decoration: underline;
+.rack-table {
+    width: 100%;
 }
+
 label {
     font-weight: normal;
 }
