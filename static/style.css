@@ -34,26 +34,71 @@
     text-align: center;
     line-height: 24px;
     font-weight: bold;
+    border-radius: 4px;
 }
-.hosts-list {
-    height: 0;
-    opacity: 0;
-    display: block;
-}
-.media-heading {
+tr:hover .media-heading {
     font-weight: bold;
 }
+
 tr:hover td {
     background-color: #EEEEEE;
 }
+
+.hosts-list {
+    max-height: 0;
+    overflow: hidden;
+    margin: 0;
+}
 tr:hover .hosts-list {
-    height: auto;
-    opacity: 1;
+    max-height: 500px;
     transition: all 0.3s;
+    margin-bottom: 5px;
+}
+.state-column {
+    text-align: right;
 }
 .badge {
     vertical-align: middle;
 }
 .table > tbody > tr.allocation-row > td{
     padding: 4px;
+}
+.allocation-row .label {
+    display: block;
+}
+.label-default-light {
+    background-color: #b9b9b9;
+}
+.copy-command {
+    width: 15px;
+    height: 20px;
+    overflow: hidden;
+    margin-left: 5px;
+    position: relative;
+}
+.clippy {
+    opacity: 0;
+    display: none;
+}
+tr:hover .clippy {
+    display: block;
+}
+.connect-link {
+    text-transform: uppercase;
+    color: #337ab7;
+    pointer-events:none;
+    position: absolute;
+    left: 0;
+}
+.connect-link:hover{
+    text-decoration: underline;
+}
+label {
+    font-weight: normal;
+}
+.allocation-row .host-icon {
+    display: inline;
+}
+.allocation-row .host-icon .glyphicon {
+    font-size: 10px;
 }
