@@ -93,6 +93,10 @@ tr.hover .hosts-list {
 label {
     font-weight: normal;
 }
+.badge-primary {
+    background-color: #428bca;
+}
+
 .allocation-row .host-icon {
     display: inline;
 }
