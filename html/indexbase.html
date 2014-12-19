@@ -5,8 +5,8 @@
 
 <div class="container">
     <div class="row">
-        <div class="col-md-7">
-            <h3>Hosts</h3>
+        <div class="col-md-6">
+            <h3>Hosts <span class="badge badge-primary" data-bind="text: hostsStateInfo().CHECKED_IN"></span></h3>
             <div class="radio-inline">
                 <label>
                     <input type="radio" name="hostViewOptions" value="state" data-bind="checked: hostListViewMode" >
@@ -57,7 +57,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-5">
+        <div class="col-md-6">
             <h3>Allocations <span class="badge" data-bind="text: allocations.allocations().length"> </span></h3>
             <table class="table">
                 <thead>
@@ -66,8 +66,8 @@
                         <th>State</th>
                     </tr>
                 </thead>
-                <tbody data-bind="foreach: allocations.allocations">
-                    <tr data-bind="attr: { allocationIndex: index }, event: { mouseover: mouseOver, mouseout: mouseOut }" class="allocation-row">
+                <tbody data-bind="foreach: { data: allocations.allocations }">
+                    <tr data-bind="attr: { allocationIndex: index }, event: { mouseenter: mouseOver, mouseleave: mouseOut }" class="allocation-row">
                         <td>
                             <div class="media">
                                 <a class="media-left pull-left" href="#">
@@ -75,7 +75,7 @@
                                 </a>
                                 <div class="media-body">
                                     <div class="media-heading" data-bind="text: info.user"> </div>
-                                    <ul class="hosts-list list-group" data-bind="foreach: listHosts()">
+                                    <ul class="hosts-list list-group" data-bind="foreach: { data: listHosts(), afterAdd: postRender }">
                                         <li class="list-group-item">
                                             <span class="host-icon " data-bind="css: config.labelClass.replace('label', 'text')">
                                                 <span class="glyphicon" data-bind="css: config.iconClass"></span>
@@ -83,15 +83,6 @@
                                             <span class="test-name" data-bind="text: testName"></span> (<span data-bind="text: hostName"></span>)
                                             <div class="pull-right copy-command" data-bind="if: hostState == 'INAUGURATION_DONE'" title="Click to copy to the clipboard a connection command to this node">
                                                 <span class="glyphicon glyphicon-circle-arrow-right connect-link" ></span>
-                                                <object classid="clsid:d27cdb6e-ae6d-11cf-96b8-444553540000" width="110" height="14" id="clippy" class="clippy">
-                                                    <param name="movie" value="/static/clippy.swf"/>
-                                                    <param name="allowScriptAccess" value="always" />
-                                                    <param name="quality" value="high" />
-                                                    <param name="scale" value="noscale" />
-                                                    <param NAME="FlashVars" data-bind="attr: { value: 'text=' + copyCommand }" >
-                                                    <param name="bgcolor" value="#FFFFFF">
-                                                    <embed class="clippy" data-bind="attr: { FlashVars: 'text=' + copyCommand }" src="/static/clippy.swf" width="110" height="14" name="clippy" quality="high" allowScriptAccess="always" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/go/getflashplayer"  bgcolor="#FFFFFF"/>
-                                                </object>
                                             </div>
                                             <span class="badge">
                                                 <span data-bind="text: ip"></span>
@@ -132,6 +123,7 @@
     </span>
 </script>
 
+<script type="text/javascript" src="/static/ZeroClipboard.js"></script>
 <script type="text/javascript" src="/realtimewebui/externals/underscore-min.js"></script>
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
 <script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
@@ -237,6 +229,25 @@ function Allocation(allocationStatus, color) {
         return Object.keys(self.allocated).length;
     };
 
+    self.postRender = function (element, index, dataItem) {
+        if (element.nodeName == "LI") {
+            var target = element.querySelector(".copy-command");
+            var client = new ZeroClipboard(target);
+            client.on("ready", function (readyEvent) {
+                client.on("copy", function (e) {
+                    e.clipboardData.setData("text/plain", dataItem.copyCommand);
+                });
+                client.on("aftercopy", function () {
+                    var iconElement = $(target).find(".glyphicon");
+                    iconElement.removeClass("glyphicon-circle-arrow-right").addClass("glyphicon-thumbs-up");
+                    setTimeout(function () {
+                        iconElement.removeClass("glyphicon-thumbs-up").addClass("glyphicon-circle-arrow-right");
+                    }, 1000);
+                })
+            });
+        }
+    };
+
     self.listHosts = ko.computed(function () {
         var list = [];
         _.each(self.allocated, function(index, nodeName) {
@@ -253,9 +264,12 @@ function Allocation(allocationStatus, color) {
         return _.sortBy(list, "hostName");
     });
 
-    self.mouseOver = function () {
+    self.mouseOver = function (allocation, event) {
         if (self.dead())
             return;
+
+        $(event.target).parents("tr.allocation-row").addClass("hover");
+
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
@@ -264,9 +278,14 @@ function Allocation(allocationStatus, color) {
         }
     };
 
-    self.mouseOut = function() {
+    self.mouseOut = function(allocation, event) {
         if (self.dead())
             return;
+
+        if ($(event.target).hasClass("copy-command")) {
+            return;
+        }
+        $(event.currentTarget).removeClass("hover");
         for (var k in self.allocated) {
             var index = self.allocated[k];
             var id = hostsByIndex[index];
@@ -324,6 +343,10 @@ function Model() {
         updateHosts(self.allocations.currentStatus());
     });
 
+    self.hostsStateInfo = function() {
+        return _.countBy(self.allocations.currentStatus().hosts, "state");
+    };
+
     self.findAllocationByHostIndex = function(hostIndex) {
         return _.find(self.allocations.allocations(), function(allocation) {
             return _.contains(_.values(allocation.allocated), hostIndex);
@@ -348,6 +371,7 @@ ko.applyBindings(model);
 
 var ui = new RealTimeWebUI();
 ui.register("status", setStatus);
+
 </script>
 
 {% endblock %}
