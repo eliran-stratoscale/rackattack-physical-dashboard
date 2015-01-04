@@ -206,7 +206,7 @@ function Allocation(allocationStatus, color) {
 
     self._getCopyCommand = function (ipAddress) {
         var port = 2000 + parseInt(ipAddress.split(".")[3]);
-        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p " + port + " root@rackattack-provider";
+        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -p " + port + " root@rackattack-nat";
     };
 
     self.update = function(allocationStatus) {
