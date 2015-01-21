@@ -27,7 +27,6 @@ install: build
 	-sudo mkdir -p /usr/share/rackattack-physical-dashboard/realtimewebui
 	sudo cp build/*.egg /usr/share/rackattack-physical-dashboard
 	sudo cp -r html /usr/share/rackattack-physical-dashboard/
-	sudo cp -r js /usr/share/rackattack-physical-dashboard/
 	sudo cp -r static /usr/share/rackattack-physical-dashboard/
 	sudo cp -r ../realtimewebui/js ../realtimewebui/html ../realtimewebui/externals /usr/share/rackattack-physical-dashboard/realtimewebui
 	sudo cp rackattack-physical-dashboard.service /usr/lib/systemd/system/rackattack-physical-dashboard.service
