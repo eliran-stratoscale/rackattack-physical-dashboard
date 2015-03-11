@@ -54,6 +54,11 @@
                         A temporary stage, on the road for the host to drop out of the cluster. This
                         happens if 5 slow reclamations failed on this host
                     </p>
+                    <p><span class="label label-default-dark"><span class="glyphicon glyphicon-ban-circle"></span> OFFLINE</span></p>
+                    <p>
+                        Configured as offline.
+                    </p>
+
                 </div>
             </div>
         </div>
@@ -146,7 +151,9 @@ var stateMap = {
     "CHECKED_IN":{ iconClass: "glyphicon-pause", labelClass: "label-primary" },
     "INAUGURATION_LABEL_PROVIDED":{ iconClass: "glyphicon-play", labelClass: "label-info" },
     "INAUGURATION_DONE":{ iconClass: "glyphicon-ok", labelClass: "label-success" },
-    "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" }
+    "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" },
+    "OFFLINE":{ iconClass: "glyphicon-ban-circle", labelClass: "label-default-dark" }
+
 };
 
 
