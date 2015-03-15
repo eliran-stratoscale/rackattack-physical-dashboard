@@ -71,6 +71,9 @@ tr.hover .hosts-list {
 .label-default-light {
     background-color: #b9b9b9;
 }
+.label-default-dark {
+    background-color: black;
+}
 .copy-command {
     width: 15px;
     height: 20px;
