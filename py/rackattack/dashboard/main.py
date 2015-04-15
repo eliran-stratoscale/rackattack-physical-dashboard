@@ -17,7 +17,8 @@ args = parser.parse_args()
 if args.realtimewebuiRoot is not None:
     realtimewebui.config.REALTIMEWEBUI_ROOT_DIRECTORY = args.realtimewebuiRoot
 if args.localhostRackattackProvider:
-    os.environ['RACKATTACK_PROVIDER'] = 'tcp://localhost:1014@tcp://localhost:1015@http://localhost:1016'
+    os.environ['RACKATTACK_PROVIDER'] = \
+        'tcp://localhost:1014@@amqp://guest:guest@localhost:1013/%2F@@http://localhost:1016'
 
 from realtimewebui import server
 from realtimewebui import rootresource
