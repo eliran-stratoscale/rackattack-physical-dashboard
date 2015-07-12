@@ -2,7 +2,11 @@ import logging
 import argparse
 import realtimewebui.config
 import os
-
+from realtimewebui import server
+from realtimewebui import rootresource
+from realtimewebui import render
+from rackattack.dashboard import pollthread
+from twisted.web import static
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -19,12 +23,6 @@ if args.realtimewebuiRoot is not None:
 if args.localhostRackattackProvider:
     os.environ['RACKATTACK_PROVIDER'] = \
         'tcp://localhost:1014@@amqp://guest:guest@localhost:1013/%2F@@http://localhost:1016'
-
-from realtimewebui import server
-from realtimewebui import rootresource
-from realtimewebui import render
-from rackattack.dashboard import pollthread
-from twisted.web import static
 
 
 poller = pollthread.PollThread()
