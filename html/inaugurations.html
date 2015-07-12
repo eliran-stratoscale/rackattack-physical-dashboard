@@ -1,0 +1,86 @@
+{% extends "dashboardbase.html" %}
+
+{% block content %}
+<link href="/static/style.css" rel="stylesheet">
+
+<script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
+<script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
+<script type="text/javascript" src="/static/knockout.bindings.orderable.js"></script>
+<script type='text/javascript' src='/static/common.js'></script>
+<script type='text/javascript' src='/static/css.js'></script>
+
+<div class="container">
+    <h2>Inauguration Time by Host (in seconds)</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByHost', field: '_id'}">Host</a></th>
+                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByHost', field: 'averageInaugurationTime'}">Average Time</a></th>
+            </tr>
+            <tr>
+                <th colspan="2">(Click a column name to sort by)</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: inaugurationTimeByHost">
+            <tr>
+                <td data-bind="text: _id"></td>
+                <td data-bind="text: averageInaugurationTime"></td>
+            </tr>
+        </tbody>
+    </table>
+    <h2>Inauguration Time by Label (in seconds)</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByLabel', field: '_id'}">Label</a></th>
+                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByLabel', field: 'averageInaugurationTime'}">Average Time</a></th>
+            </tr>
+            <tr>
+                <th colspan="2">(Click a column name to sort by)</th>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: inaugurationTimeByLabel">
+            <tr>
+                <td data-bind="text: _id"></td>
+                <td data-bind="text: averageInaugurationTime"></td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+
+function fixNumberFormat(statsObject)
+{
+    statsObject.forEach(function(unused, index, arr) {
+        arr[index].averageInaugurationTime = Number(arr[index].averageInaugurationTime.toFixed(1));
+    });
+}
+
+function setStats(statsObject)
+{
+    if (!statsObject)
+        return;
+
+    fixNumberFormat(statsObject['averageTimeByHost'])
+    fixNumberFormat(statsObject['averageTimeByLabel'])
+    model.inaugurationTimeByHost(statsObject['averageTimeByHost']);
+    model.inaugurationTimeByLabel(statsObject['averageTimeByLabel']);
+    ui.unregister("inaugurationsStats", setStats);
+}
+
+function Model() {
+    var self = this;
+    self.inaugurationTimeByHost = ko.observableArray([]);
+    self.inaugurationTimeByLabel = ko.observableArray([]);
+}
+
+
+var model = new Model();
+ko.applyBindings(model);
+
+var ui = new RealTimeWebUI();
+ui.register("inaugurationsStats", setStats);
+</script>
+
+{% endblock %}

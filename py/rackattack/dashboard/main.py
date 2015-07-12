@@ -25,14 +25,16 @@ if args.localhostRackattackProvider:
         'tcp://localhost:1014@@amqp://guest:guest@localhost:1013/%2F@@http://localhost:1016'
 
 
-poller = pollthread.PollThread()
+hostsStatsPoller = pollthread.PollThread()
+inaugurationTimePoller = pollthread.InaugurationTimesPollThread()
 
 render.addTemplateDir(os.path.join(args.dashboardRoot, 'html'))
 render.DEFAULTS['title'] = "Rackattack"
 render.DEFAULTS['brand'] = "Rackattack"
-render.DEFAULTS['mainMenu'] = []
+render.DEFAULTS['mainMenu'] = [dict(title="inaugurations", href="inaugurations.html")]
 root = rootresource.rootResource()
 root.putChild("js", static.File(os.path.join(args.dashboardRoot, "js")))
 root.putChild("static", static.File(os.path.join(args.dashboardRoot, "static")))
 root.putChild("favicon.ico", static.File(os.path.join(args.dashboardRoot, "static", "favicon.ico")))
+root.putChild("inaugurations", rootresource.Renderer("inaugurations.html", {}))
 server.runUnsecured(root, args.webPort, args.webSocketPort)
