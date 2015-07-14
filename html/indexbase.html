@@ -1,6 +1,28 @@
 {% extends "dashboardbase.html" %}
 
 {% block content %}
+<link href="/static/darktheme.css" rel="stylesheet" id="dark">
+<link href="/static/lighttheme.css" rel="stylesheet" id="light">
+
+<div style="float:right;">
+    <div><label><input type="radio" name="chooseStyle" value="light" checked> Light</label></div>
+    <div><label><input type="radio" name="chooseStyle" value="dark"> Dark</label></div>
+</div>
+<script>
+(function() {
+    var styles = {
+    light: $("#light"),
+    dark:  $("#dark").detach()
+    };
+
+    $("input[name=chooseStyle]").click(function() {
+    var other = this.value === "light" ? "dark" : "light";
+    styles[this.value].appendTo('head');
+    styles[other].detach();
+    });
+})();
+</script>
+
 <link href="/static/style.css" rel="stylesheet">
 
 <div class="container">
