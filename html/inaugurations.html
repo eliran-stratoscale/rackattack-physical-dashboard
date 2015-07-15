@@ -4,7 +4,6 @@
 <link href="/static/style.css" rel="stylesheet">
 
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
-<script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
 <script type="text/javascript" src="/static/knockout.bindings.orderable.js"></script>
 <script type='text/javascript' src='/static/common.js'></script>
 <script type='text/javascript' src='/static/css.js'></script>
@@ -49,6 +48,14 @@
 </div>
 
 <script>
+function httpGet(theUrl)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", theUrl, false);
+    xmlHttp.send(null);
+    response = JSON.parse(xmlHttp.responseText);
+    return response
+}
 
 function fixNumberFormat(statsObject)
 {
@@ -57,16 +64,19 @@ function fixNumberFormat(statsObject)
     });
 }
 
-function setStats(statsObject)
+function setStats()
 {
+    statsObject = httpGet("http://localhost:6001/averageInaugurationTime?by=host")
     if (!statsObject)
         return;
+    fixNumberFormat(statsObject)
+    model.inaugurationTimeByHost(statsObject);
 
-    fixNumberFormat(statsObject['averageTimeByHost'])
-    fixNumberFormat(statsObject['averageTimeByLabel'])
-    model.inaugurationTimeByHost(statsObject['averageTimeByHost']);
-    model.inaugurationTimeByLabel(statsObject['averageTimeByLabel']);
-    ui.unregister("inaugurationsStats", setStats);
+    statsObject = httpGet("http://localhost:6001/averageInaugurationTime?by=label")
+    if (!statsObject)
+        return;
+    fixNumberFormat(statsObject)
+    model.inaugurationTimeByLabel(statsObject);
 }
 
 function Model() {
@@ -78,9 +88,8 @@ function Model() {
 
 var model = new Model();
 ko.applyBindings(model);
+setStats()
 
-var ui = new RealTimeWebUI();
-ui.register("inaugurationsStats", setStats);
 </script>
 
 {% endblock %}
