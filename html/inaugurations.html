@@ -12,7 +12,7 @@
     <table class="table" id="inaugurationsByHost">
         <thead>
             <tr data-bind="foreach: byHost.headers">
-                <th><a href="#" data-bind="click: $parent.sort, text: title"></a></th>
+                <th><a href="#" data-bind="click: $parent.byHost.sort, text: title"></a></th>
             </tr>
             <tr data-bind="visible: byHost.isActivateCompactModeButtonVisible">
                 <td colspan="3">
@@ -53,7 +53,7 @@
     <table class="table" id="inaugurationsByLabel">
         <thead>
             <tr data-bind="foreach: byLabel.headers">
-                <th><a href="#" data-bind="click: $parent.sort, text: title"></a></th>
+                <th><a href="#" data-bind="click: $parent.byLabel.sort, text: title"></a></th>
             </tr>
             <tr data-bind="visible: byLabel.isActivateCompactModeButtonVisible">
                 <td colspan="3">
@@ -65,7 +65,7 @@
             <tr data-bind="visible: byLabel.isDeactivateCompactModeButtonVisible">
                 <td colspan="3">
                     <span data-bind="text: byLabel.values().length"></span> Total |
-                    <a href="#" data-bind="click: byLabel.toggleVisibility">. . . Show all records</a> |
+                    <a href="#" data-bind="click: byLabel.toggleVisibility">Show all records</a> |
                     (Click a column name to sort by)
                 </td>
             </tr>
@@ -85,7 +85,7 @@
             </tr>
             <tr data-bind="visible: byLabel.isDeactivateCompactModeButtonVisible">
                 <td colspan="3">
-                    <a href="#" data-bind="click: byLabel.toggleVisibility">Show all records</a>
+                    <a href="#" data-bind="click: byLabel.toggleVisibility">. . . Show all records</a>
                 </td>
             </tr>
         </tfoot>
@@ -125,7 +125,6 @@ function InaugurationTimesTableViewModel(tableId, url, columnName) {
     ];
     self.activeSort = self.headers[0];
     self.sort = function(header, event) {
-        alert("sorting...");
         toggleBack = false;
         if (self.isCompact()) {
             toggleBack = true;
