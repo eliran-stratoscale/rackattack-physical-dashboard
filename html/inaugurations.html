@@ -4,38 +4,64 @@
 <link href="/static/style.css" rel="stylesheet">
 
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.1.0.js"></script>
-<script type="text/javascript" src="/static/knockout.bindings.orderable.js"></script>
 <script type='text/javascript' src='/static/common.js'></script>
 <script type='text/javascript' src='/static/css.js'></script>
 
 <div class="container">
     <h2>Inauguration Time by Host (in seconds)</h3>
-    <table class="table">
+    
+    <table id="inaugurationsByHost" class="table">
         <thead>
-            <tr>
-                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByHost', field: '_id'}">Host</a></th>
-                <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByHost', field: 'averageInaugurationTime'}">Average Time</a></th>
+            <tr data-bind="foreach: headers">
+                <th><a href="#" data-bind="click: $parent.sort, text: title"></a></th>
             </tr>
-            <tr>
-                <th colspan="2">(Click a column name to sort by)</th>
+            <tr data-bind="visible: inaugurationTimeByHostActivateCompactModeVisible">
+                <td colspan="3">
+                    <span data-bind="text: inaugurationTimeByHost().length"></span> Total |
+                    <a href="#" data-bind="click: toggleVisibility">Hide records</a> |
+                    (Click a column name to sort by)
+                </td>
+            </tr>
+            <tr data-bind="visible: inaugurationTimeByHostDeactivateCompactModeVisible">
+                <td colspan="3">
+                    <span data-bind="text: inaugurationTimeByHost().length"></span> Total |
+                    <a href="#" data-bind="click: toggleVisibility">Show all records</a> |
+                    (Click a column name to sort by)
+                </td>
             </tr>
         </thead>
         <tbody data-bind="foreach: inaugurationTimeByHost">
             <tr>
+                <td data-bind="text: $index() + 1"></td>
                 <td data-bind="text: _id"></td>
                 <td data-bind="text: averageInaugurationTime"></td>
             </tr>
         </tbody>
+        <tfoot>
+            <tr data-bind="visible: inaugurationTimeByHostActivateCompactModeVisible">
+                <td colspan="3">
+                    <a href="#" data-bind="click: toggleVisibility">Hide records</a>
+                </td>
+            </tr>
+            <tr data-bind="visible: inaugurationTimeByHostDeactivateCompactModeVisible">
+                <td colspan="3">
+                    <a href="#" data-bind="click: toggleVisibility">Show all records</a>
+                </td>
+            </tr>
+        </tfoot>
     </table>
     <h2>Inauguration Time by Label (in seconds)</h3>
-    <table class="table">
+    <table id="inaugurationsByLabel" class="table">
         <thead>
             <tr>
                 <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByLabel', field: '_id'}">Label</a></th>
                 <th><a href="#" data-bind="orderable: {collection: 'inaugurationTimeByLabel', field: 'averageInaugurationTime'}">Average Time</a></th>
             </tr>
             <tr>
-                <th colspan="2">(Click a column name to sort by)</th>
+                <th colspan="2">
+                    (Click a column name to sort by)
+                    <button id="inaugurationsByLabelButton">Show/Hide all records</button>
+                </th>
             </tr>
         </thead>
         <tbody data-bind="foreach: inaugurationTimeByLabel">
@@ -44,10 +70,20 @@
                 <td data-bind="text: averageInaugurationTime"></td>
             </tr>
         </tbody>
+        <tfoot>
+            <tr>
+                <td><a href="#" data-bind="visible: inaugurationTimeByHostIsCompact, click: toggleVisibility">Show all records...</a></td>
+            </tr>
+            <tr>
+                <td><a href="#" data-bind="visible: !inaugurationTimeByHostIsCompact, click: toggleVisibility">Hide all records...</a></td>
+            </tr>
+        </tfoot>
     </table>
 </div>
 
 <script>
+NR_RECORDS_IN_COMPACT_MODE = 5
+
 function httpGet(theUrl)
 {
     var xmlHttp = new XMLHttpRequest();
@@ -64,32 +100,83 @@ function fixNumberFormat(statsObject)
     });
 }
 
-function setStats()
-{
-    statsObject = httpGet("http://localhost:6001/averageInaugurationTime?by=host")
-    if (!statsObject)
-        return;
-    fixNumberFormat(statsObject)
-    model.inaugurationTimeByHost(statsObject);
-
-    statsObject = httpGet("http://localhost:6001/averageInaugurationTime?by=label")
-    if (!statsObject)
-        return;
-    fixNumberFormat(statsObject)
-    model.inaugurationTimeByLabel(statsObject);
-}
-
-function Model() {
+function InaugurationTimes() {
     var self = this;
-    self.inaugurationTimeByHost = ko.observableArray([]);
     self.inaugurationTimeByLabel = ko.observableArray([]);
+    self.inaugurationTimeByHost = ko.observableArray([]);
+    self.inaugurationTimeByHostIsCompact = ko.observable(false);
+    self.inaugurationTimeByHostAreCompactButtonsNeeded = ko.observable(false);
+    self.inaugurationTimeByHostActivateCompactModeVisible = ko.observable(false);
+    self.inaugurationTimeByHostDeactivateCompactModeVisible = ko.observable(false);
+    self.nrRecords = ko.observable(false);
+    self.headers = [
+        {title:''},
+        {title:'Host',sortPropertyName:'_id', asc: true},
+        {title:'Average Time',sortPropertyName:'averageInaugurationTime', asc: true},
+    ];
+    self.activeSort = self.headers[0];
+    self.firstHiddenRowNumberInCompactMode = NR_RECORDS_IN_COMPACT_MODE + 1
+    self.hiddenRowsInCompactModeQuery = 'tr:gt(' + self.firstHiddenRowNumberInCompactMode + ')';
+    self.sort = function(header, event){
+        toggleBack = false;
+        if (self.inaugurationTimeByHostIsCompact()) {
+            toggleBack = true;
+            self.toggleVisibility()
+        }
+        //if this header was just clicked a second time
+        if(self.activeSort === header) {
+            header.asc = !header.asc;
+        } else {
+            self.activeSort = header;
+        }
+        var prop = self.activeSort.sortPropertyName;
+        var ascSort = function(a,b){ return a[prop] < b[prop] ? -1 : a[prop] > b[prop] ? 1 : a[prop] == b[prop] ? 0 : 0; };
+        var descSort = function(a,b){ return a[prop] > b[prop] ? -1 : a[prop] < b[prop] ? 1 : a[prop] == b[prop] ? 0 : 0; };
+        var sortFunc = self.activeSort.asc ? ascSort : descSort;
+        self.inaugurationTimeByHost.sort(sortFunc);
+        if (toggleBack) {
+            self.toggleVisibility();
+        }
+    };
+    self.toggleVisibility = function() {
+        hiddenRowsInCompactMode = $('#inaugurationsByHost').find(self.hiddenRowsInCompactModeQuery);
+        if (self.inaugurationTimeByHostIsCompact()) {
+            hiddenRowsInCompactMode.show();
+            self.inaugurationTimeByHostIsCompact(false);
+            self.inaugurationTimeByHostActivateCompactModeVisible(true);
+            self.inaugurationTimeByHostDeactivateCompactModeVisible(false);
+        } else {
+            hiddenRowsInCompactMode.hide();
+            self.inaugurationTimeByHostIsCompact(true);
+            self.inaugurationTimeByHostActivateCompactModeVisible(false);
+            self.inaugurationTimeByHostDeactivateCompactModeVisible(true);
+        }
+    }
+    self.setStats = function() {
+        statsObject = httpGet("http://localhost:6001/averageInaugurationTime?by=host")
+        if (!statsObject)
+            return;
+        fixNumberFormat(statsObject)
+        self.inaugurationTimeByHost(statsObject);
+        hiddenRowsInCompactMode = $('#inaugurationsByHost').find(self.hiddenRowsInCompactModeQuery);
+        if (hiddenRowsInCompactMode.length > NR_RECORDS_IN_COMPACT_MODE) {
+            self.inaugurationTimeByHostAreCompactButtonsNeeded(true);
+            self.toggleVisibility()
+        }
+    }
 }
 
 
-var model = new Model();
-ko.applyBindings(model);
-setStats()
+var inaugurationTimes = new InaugurationTimes();
+ko.applyBindings(inaugurationTimes);
+inaugurationTimes.setStats()
+//var inaugurationTimeByLabelViewModel = new InaugurationTimeByLabelViewModel();
+//ko.applyBindings(inaugurationTimeByLabelViewModel);
 
+
+$("#inaugurationsByLabelButton").on("click", function() {
+    $('#inaugurationsByLabel').find('tr:gt(6)').toggle();
+});
 </script>
 
 {% endblock %}
