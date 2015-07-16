@@ -10,6 +10,8 @@ from twisted.web import static
 from twisted.web.resource import Resource
 import json
 import pymongo
+import datetime
+import bson
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
@@ -30,35 +32,85 @@ if args.localhostRackattackProvider:
         'tcp://localhost:1014@@amqp://guest:guest@localhost:1013/%2F@@http://localhost:1016'
 
 
-def getAverageInaugurationTimeBy(fieldName):
-    pipe = [{'$match': {'inauguration_done': True}},
-            {'$group': {'_id': "$%(fieldName)s" % dict(fieldName=fieldName),
-                        'averageInaugurationTime': {'$avg': '$inauguration_period_length'}}},
-            {'$sort': {'averageInaugurationTime': -1}}]
-    data = db.inaugurations.aggregate(pipe)
-    if isinstance(data, dict):
-        data = data["result"]
-    else:
-        data = list(data)
-    return data
+class DBQuery(Resource):
+    @classmethod
+    def parseMongoDBResult(cls, result):
+        if isinstance(result, dict):
+            return result["result"]
+        return list(result)
 
-
-class Query(Resource):
     def render_GET(self, request):
         request.responseHeaders.addRawHeader(b"content-type", b"application/json")
-        if "by" in request.args:
-            groupByField = request.args["by"]
-            try:
-                groupByField = groupByField[0]
-                groupByField = dict(host="host_id", label="imageLabel")[groupByField]
-            except (IndexError, KeyError) as ex:
-                logging.warn("Got a request with an invalid 'by' field")
-                raise
-        else:
-            logging.warn("Got a request with an invalid 'by' field")
-            raise ValueError("Missing 'by' field (host/label)")
-        result = getAverageInaugurationTimeBy(groupByField)
+        result = self._getResult(request)
+        result = self.parseMongoDBResult(result)
+        defaultValueFields = self._getFieldsInWhichToPutDefaultValues()
+        if defaultValueFields is None:
+            defaultValueFields = []
+        unixTimestampFields = self._getUnixTimestampFields()
+        if unixTimestampFields is None:
+            unixTimestampFields = []
+        for record in result:
+            for key, value in record.iteritems():
+                if isinstance(value, bson.objectid.ObjectId):
+                    record[key] = str(value)
+                if isinstance(value, datetime.datetime):
+                    record[key] = value.isoformat()
+                if key in unixTimestampFields:
+                    record[key] = datetime.datetime.fromtimestamp(int(value)).strftime('%Y-%m-%d %H:%M:%S')
+            for field in defaultValueFields: 
+                record.setdefault(field, "unknown")
         return json.dumps(result)
+
+    def _getResult(self):
+        raise NotImplementedError
+    
+    def _getFieldsInWhichToPutDefaultValues(self):
+        raise NotImplementedError
+
+class GetAverageInaugurationTime(DBQuery):
+    def _getResult(self, request):
+        fieldName = self._getFieldName()
+        pipe = [{'$match': {'inauguration_done': True}},
+                {'$group': {'_id': "$%(fieldName)s" % dict(fieldName=fieldName),
+                            'averageInaugurationTime': {'$avg': '$inauguration_period_length'}}},
+                {'$sort': {'averageInaugurationTime': -1}}]
+        data = db.inaugurations.aggregate(pipe)
+        return data
+    
+    @classmethod
+    def _getFieldName(self):
+        raise NotImplementedError
+
+    def _getFieldsInWhichToPutDefaultValues(self):
+        return None
+
+    def _getUnixTimestampFields(self):
+        return None
+
+class GetAverageInaugurationTimeByHost(GetAverageInaugurationTime):
+    @classmethod
+    def _getFieldName(cls):
+        return "host_id"
+
+
+class GetAverageInaugurationTimeByLabel(GetAverageInaugurationTime):
+    @classmethod
+    def _getFieldName(cls):
+        return "imageLabel"
+
+
+class GetFailedInaugurations(DBQuery):
+    def _getResult(self, request):
+        query = {'inauguration_done': False}
+        data = db.inaugurations.find(query)
+        return data
+
+    def _getFieldsInWhichToPutDefaultValues(self):
+        return ("user",)
+
+    def _getUnixTimestampFields(self):
+        return ("start_timestamp",)
+
 
 pollThread = pollthread.PollThread()
 
@@ -71,5 +123,7 @@ root.putChild("js", static.File(os.path.join(args.dashboardRoot, "js")))
 root.putChild("static", static.File(os.path.join(args.dashboardRoot, "static")))
 root.putChild("favicon.ico", static.File(os.path.join(args.dashboardRoot, "static", "favicon.ico")))
 root.putChild("inaugurations", rootresource.Renderer("inaugurations.html", {}))
-root.putChild("averageInaugurationTime", Query())
+root.putChild("averageInaugurationTimeByLabel", GetAverageInaugurationTimeByLabel())
+root.putChild("averageInaugurationTimeByHost", GetAverageInaugurationTimeByHost())
+root.putChild("failedInaugurations", GetFailedInaugurations())
 server.runUnsecured(root, args.webPort, args.webSocketPort)

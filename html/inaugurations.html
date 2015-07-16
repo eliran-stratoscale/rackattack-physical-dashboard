@@ -8,7 +8,54 @@
 <script type='text/javascript' src='/static/css.js'></script>
 
 <div class="container">
-    <h2>Inauguration Time by Host (in seconds)</h3>
+    <h2>Failed Inaugurations</h2>
+    <table class="table" id="failedInaugurations">
+        <thead>
+            <tr data-bind="foreach: failedInaugurations.headers">
+                <th><a href="#" data-bind="click: $parent.failedInaugurations.sort, text: title"></a></th>
+            </tr>
+            <tr data-bind="visible: failedInaugurations.isActivateCompactModeButtonVisible">
+                <td colspan="9">
+                    <span data-bind="text: failedInaugurations.values().length"></span> Total |
+                    <a href="#" data-bind="click: failedInaugurations.toggleVisibility">Hide records</a> |
+                    (Click a column name to sort by)
+                </td>
+            </tr>
+            <tr data-bind="visible: failedInaugurations.isDeactivateCompactModeButtonVisible">
+                <td colspan="9">
+                    <span data-bind="text: failedInaugurations.values().length"></span> Total |
+                    <a href="#" data-bind="click: failedInaugurations.toggleVisibility">Show all records</a> |
+                    (Click a column name to sort by)
+                </td>
+            </tr>
+        </thead>
+        <tbody data-bind="foreach: failedInaugurations.values">
+            <tr>
+                <td data-bind="text: $index() + 1"></td>
+                <td data-bind="text: start_timestamp"></td>
+                <td data-bind="text: user"></td>
+                <td data-bind="text: name"></td>
+                <td data-bind="text: allocation_idx"></td>
+                <td data-bind="text: host_id"></td>
+                <td data-bind="text: local_store_count"></td>
+                <td data-bind="text: remote_store_count"></td>
+                <td data-bind="text: majority_chain_type"></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr data-bind="visible: failedInaugurations.isActivateCompactModeButtonVisible">
+                <td colspan="9">
+                    <a href="#" data-bind="click: failedInaugurations.toggleVisibility">Hide records</a>
+                </td>
+            </tr>
+            <tr data-bind="visible: failedInaugurations.isDeactivateCompactModeButtonVisible">
+                <td colspan="9">
+                    <a href="#" data-bind="click: failedInaugurations.toggleVisibility">. . . Show all records</a>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    <h2>Inauguration Time by Host (in seconds)</h2>
     <table class="table" id="inaugurationsByHost">
         <thead>
             <tr data-bind="foreach: byHost.headers">
@@ -49,7 +96,7 @@
             </tr>
         </tfoot>
     </table>
-    <h2>Inauguration Time by Label (in seconds)</h3>
+    <h2>Inauguration Time by Label (in seconds)</h2>
     <table class="table" id="inaugurationsByLabel">
         <thead>
             <tr data-bind="foreach: byLabel.headers">
@@ -104,25 +151,30 @@ function httpGet(theUrl)
     return response
 }
 
-function fixNumberFormat(statsObject)
+function fixNumberFormat(statsObject, field)
 {
     statsObject.forEach(function(unused, index, arr) {
-        arr[index].averageInaugurationTime = Number(arr[index].averageInaugurationTime.toFixed(1));
+        if (arr[index][field] == 'unknown' || arr[index][field] === null) {
+            arr[index][field] = '-999';
+        } else {
+            try {
+                arr[index][field] = Number(arr[index][field].toFixed(1));
+            } catch(err) {
+                alert(arr[index][field]);
+                alert(field);
+            }
+        }
     });
 }
 
-function InaugurationTimesTableViewModel(tableId, url, columnName) {
+function InaugurationTimesTableViewModel(tableId, url, headers) {
     var self = this;
     self.tableId = tableId
     self.values = ko.observableArray([]);
     self.isCompact = ko.observable(false);
     self.isActivateCompactModeButtonVisible = ko.observable(false);
     self.isDeactivateCompactModeButtonVisible = ko.observable(false);
-    self.headers = [
-        {title: ''},
-        {title: columnName, sortPropertyName: '_id', asc: true},
-        {title: 'Average Time', sortPropertyName: 'averageInaugurationTime', asc: true}
-    ];
+    self.headers = headers
     self.activeSort = self.headers[0];
     self.sort = function(header, event) {
         toggleBack = false;
@@ -165,7 +217,11 @@ function InaugurationTimesTableViewModel(tableId, url, columnName) {
         statsObject = httpGet(url)
         if (!statsObject)
             return;
-        fixNumberFormat(statsObject)
+        self.headers.forEach(function(unused, index, arr) {
+            if (arr[index].isNumeric) {
+                fixNumberFormat(statsObject, arr[index].sortPropertyName)
+            }
+        });
         self.values(statsObject);
         if (self.values().length > NR_RECORDS_IN_COMPACT_MODE) {
             self.toggleVisibility()
@@ -175,16 +231,35 @@ function InaugurationTimesTableViewModel(tableId, url, columnName) {
 
 function InaugurationTimesPageViewModel() {
     var self = this;
-    var generalUrl = "http://localhost:6001/averageInaugurationTime";
+    var generalUrl = "http://localhost:6001/";
+    headers = [{title: '', isNumeric: false},
+               {title: 'Host', sortPropertyName: '_id', asc: true, isNumeric: false},
+               {title: 'Average Time', sortPropertyName: 'averageInaugurationTime', asc: true, isNumeric: true}]
     self.byHost = new InaugurationTimesTableViewModel("inaugurationsByHost",
-                                                      generalUrl + "?by=host",
-                                                      "Host")
+                                                      generalUrl + "averageInaugurationTimeByHost",
+                                                      headers)
+    headers = [{title: ''},
+               {title: 'Label', sortPropertyName: '_id', asc: true, isNumeric: false},
+               {title: 'Average Time', sortPropertyName: 'averageinaugurationtime', asc: true, isNumeric: false}]
     self.byLabel = new InaugurationTimesTableViewModel("inaugurationsByLabel",
-                                                       generalUrl + "?by=label",
-                                                       "Label")
+                                                       generalUrl + "averageInaugurationTimeByLabel",
+                                                       headers)
+    headers = [{title: '', isNumeric: false},
+               {title: 'Start Time', sortPropertyName: 'start_timestamp', asc: true, isNumeric: false},
+               {title: 'User', sortPropertyName: 'user', asc: true, isNumeric: false},
+               {title: 'Name', sortPropertyName: 'name', asc: true, isNumeric: false},
+               {title: 'Allocation Index', sortPropertyName: 'allocation_idx', asc: true, isNumeric: true},
+               {title: 'Host Id', sortPropertyName: 'host_id', asc: true, isNumeric: false},
+               {title: 'Local Store Count', sortPropertyName: 'local_store_count', asc: true, isNumeric: true},
+               {title: 'Remote Store Count', sortPropertyName: 'remote_store_count', asc: true, isNumeric: true},
+               {title: 'Majority Chain', sortPropertyName: 'majority_chain_type', asc: true, isNumeric: false}]
+    self.failedInaugurations = new InaugurationTimesTableViewModel("failedInaugurations",
+                                                                   generalUrl + "failedInaugurations",
+                                                                   headers)
     self.setStats = function() {
         self.byHost.setStats()
         self.byLabel.setStats()
+        self.failedInaugurations.setStats()
     }
 }
 
