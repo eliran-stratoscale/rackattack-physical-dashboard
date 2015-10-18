@@ -33,6 +33,7 @@ render.addTemplateDir(os.path.join(args.dashboardRoot, 'html'))
 render.DEFAULTS['title'] = "Rackattack"
 render.DEFAULTS['brand'] = "Rackattack"
 render.DEFAULTS['mainMenu'] = []
+render.DEFAULTS["useStyleTheme"] = True
 root = rootresource.rootResource()
 root.putChild("js", static.File(os.path.join(args.dashboardRoot, "js")))
 root.putChild("static", static.File(os.path.join(args.dashboardRoot, "static")))

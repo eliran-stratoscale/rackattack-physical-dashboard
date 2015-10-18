@@ -1,10 +1,7 @@
-body {
+.dark {
     color: #cccccc;
     background-color: black;
 }
-.panel {
-    background-color:black;
-}
-h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
-    color: #cccccc;
+.popover-content, .popover-title, .hosts-list {
+    color: black;
 }

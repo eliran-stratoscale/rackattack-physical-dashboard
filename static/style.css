@@ -40,6 +40,7 @@
 }
 tr.hover .media-heading {
     font-weight: bold;
+    color: black;
 }
 
 tr.hover td {
