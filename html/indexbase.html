@@ -3,8 +3,8 @@
 {% block content %}
 
 <div style="float:right;" >
-    <div><label><input type="radio" name="chooseStyle" value="light" data-bind="checked: theme"> Light</label></div>
-    <div><label><input type="radio" name="chooseStyle" value="dark" data-bind="checked: theme"> Dark</label></div>
+    <div><label><input type="radio" onclick="storeThemeInCookie();" name="chooseStyle" value="light" data-bind="checked: theme"> Light</label></div>
+    <div><label><input type="radio" onclick="storeThemeInCookie();" name="chooseStyle" value="dark" data-bind="checked: theme"> Dark</label></div>
 </div>
 
 <link href="/static/style.css" rel="stylesheet">
@@ -141,6 +141,7 @@
 <script type="text/javascript" src="/realtimewebui/externals/knockout-3.3.0.js"></script>
 <script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
 <script type="text/javascript" src="/static/utils.js"></script>
+<script type="text/javascript" src="/static/cookies.js"></script>
 <script>
 var defaultMaxNrServersPerRack = 64;
 var wereRacksUpdated = false;
@@ -393,7 +394,11 @@ function Model() {
     self.allocations = new AllocationsModel();
     self.hostListViewMode = ko.observable("state");
     self.racks = ko.observableArray([]);
-    self.theme = ko.observable("light");
+    theme = Cookies.get("theme");
+    if (theme === undefined) {
+        theme = "light";
+    }
+    self.theme = ko.observable(theme);
 
     self.hostListViewMode.subscribe(function(state) {
         updateHosts(self.allocations.currentStatus());
@@ -422,11 +427,17 @@ function Model() {
     };
 }
 
+
 var model = new Model();
 ko.applyBindings(model);
 
 var ui = new RealTimeWebUI();
 ui.register("status", setStatus);
+
+function storeThemeInCookie() {
+    theme = $('input[name="chooseStyle"]:checked').val();
+    Cookies.set("theme", theme)
+}
 
 </script>
 
