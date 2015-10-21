@@ -151,19 +151,19 @@
 <script type="text/html" id="machine-template-state">
     <span class="label <%= config.labelClass %> machine-label">
         <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverName  %>
+        <%= serverNumber  %>
     </span>
 </script>
 <script type="text/html" id="machine-template-allocation">
     <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
         <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverName  %>
+        <%= serverNumber  %>
     </span>
 </script>
 <script type="text/html" id="machine-template-pool">
     <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
         <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverName  %>
+        <%= serverNumber  %>
     </span>
 </script>
 
@@ -211,9 +211,9 @@ function updateHosts(statusObject)
     var viewMode = model.hostListViewMode();
     var template = _.template( $("#machine-template-" + viewMode).html() );
     $(".machine").popover('destroy').each(function() {
-        var serverName = $(this).attr("id").replace(/node-rack\d+-server/, "");
+        var serverNumber = $(this).attr("id").replace(/node-rack\d+-server/, "");
         $(this).html(template({
-            serverName: serverName,
+            serverNumber: serverNumber,
             config: {
                 iconClass: "glyphicon-ban-circle",
                 labelClass: "label-default-light"
@@ -225,7 +225,7 @@ function updateHosts(statusObject)
     for (var i in statusObject.hosts) {
         var hostObject = statusObject.hosts[i];
         var allocation = model.findAllocationByHostIndex(hostObject.index) || {};
-        var serverName = hostObject.id.replace(/rack\d+-server/, "");
+        var serverNumber = hostObject.id.replace(/rack\d+-server/, "");
         hostsByIndex[hostObject.index] = hostObject.id;
         var node = $("#node-" + hostObject.id);
         var pool;
@@ -235,7 +235,7 @@ function updateHosts(statusObject)
             pool = "default";
         }
         var data = {
-            serverName: serverName,
+            serverNumber: serverNumber,
             config: stateMap[hostObject.state]
         };
         if (viewMode == "allocation") {
