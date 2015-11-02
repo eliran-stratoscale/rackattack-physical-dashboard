@@ -263,30 +263,29 @@ function updateHosts(statusObject)
 
 function updateRacks(statusObject) {
     var nrHostsPerRow = 2;
-    racksNumbers = _.reduce(statusObject.hosts, function(racksNumbers, host) {
+    serversByRacks = _.groupBy(statusObject.hosts, function(host) {
         var rackNumber = parseInt(host.id.replace("rack", "").replace("-server\d", ""));
-        racksNumbers.push(rackNumber);
-        return racksNumbers;
-    },
-    []);
-    racksNumbers = _.uniq(racksNumbers);
-    racksNumbers = _.sortBy(racksNumbers, function(number) {
-        return number;
+        return rackNumber;
     });
-    maxServerNumber = _.groupBy(statusObject.hosts, function(host) {
-        return parseInt(host.id.replace(/rack\d+-server/, ""));
+    racksNumbers = Object.keys(serversByRacks);
+    orderedRackNumbers = _.sortBy(racksNumbers, function(number) {
+        return number;
     });
     racksTables = [];
     // Pupulate the arrays which represent the racks' table rows
-    _.each(racksNumbers, function(rackNumber) {
+    _.each(orderedRackNumbers, function(rackNumber) {
         rack = {number: rackNumber, hostsRows: []};
         racksTables.push(rack);
         var row = [];
-        for (var hostNumber = 1; hostNumber <= defaultMaxNrServersPerRack; ++hostNumber) {
+        serverWithMaxNumber = _.max(serversByRacks[rackNumber], function(host) {
+            return parseInt(host.id.replace(/rack\d+-server/, ""));
+        });
+        maxServerNumber = parseInt(serverWithMaxNumber.id.replace(/rack\d+-server/, ""));
+        for (var serverNumber = 1; serverNumber <= maxServerNumber; ++serverNumber) {
             hostElementId = "node-rack" + padWithLeadingZeros(rack.number) + "-server" +
-                padWithLeadingZeros(hostNumber);
+                padWithLeadingZeros(serverNumber);
             row.push(hostElementId);
-            if (hostNumber % nrHostsPerRow == 0 || hostNumber == defaultMaxNrServersPerRack) {
+            if (serverNumber % nrHostsPerRow == 0 || serverNumber == maxServerNumber) {
                 rack.hostsRows.push(row);
                 row = [];
             }
