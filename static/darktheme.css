@@ -5,3 +5,6 @@
 .popover-content, .popover-title, .hosts-list {
     color: black;
 }
+.dark .panel {
+    background-color: #232323;
+}
