@@ -9,6 +9,12 @@
 .machine .label {
     display: block;
 }
+.machine-label:hover {
+    background-color: lightsteelblue!important;
+}
+.machine-link:hover {
+    text-decoration: none;
+}
 
 .machine-idle {
     background-color: white;

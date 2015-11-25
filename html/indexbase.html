@@ -152,22 +152,30 @@
 </div>
 
 <script type="text/html" id="machine-template-state">
-    <span class="label <%= config.labelClass %> machine-label">
-        <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverNumber  %>
-    </span>
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
 </script>
 <script type="text/html" id="machine-template-allocation">
-    <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
-        <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverNumber  %>
-    </span>
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
+</script>
 </script>
 <script type="text/html" id="machine-template-pool">
-    <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
-        <span class="glyphicon <%= config.iconClass %>"></span>
-        <%= serverNumber  %>
-    </span>
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
+</script>
 </script>
 
 <script type="text/javascript" src="/static/ZeroClipboard.js"></script>
@@ -218,6 +226,7 @@ function updateHosts(statusObject)
         var serverNumber = $(this).attr("id").replace(/node-rack\d+-server/, "");
         $(this).html(template({
             serverNumber: serverNumber,
+            serverID: $(this).attr("id"),
             config: {
                 iconClass: "glyphicon-ban-circle",
                 labelClass: "label-default-light"
@@ -239,6 +248,7 @@ function updateHosts(statusObject)
             pool = "default";
         }
         var data = {
+            serverID: hostObject.id,
             serverNumber: serverNumber,
             config: stateMap[hostObject.state]
         };
