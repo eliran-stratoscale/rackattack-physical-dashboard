@@ -1,0 +1,15 @@
+{% extends "indexbase-wallboard.html" %}
+
+
+{% block rack %}
+<div data-bind="foreach: racks">
+    <div class="rack-column">
+        <h4>Rack <span data-bind="text: number"></span></h4>
+        <table data-bind="foreach: hostsRows" class="rack-table">
+            <tr data-bind="foreach: $data">
+                <td class="machine" data-bind="attr: {'id': $data}">
+            </tr>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,391 @@
+{% extends "dashboardbase.html" %}
+
+{% block content %}
+
+<link href="/static/style.css" rel="stylesheet">
+<link href="/static/darktheme.css" rel="stylesheet" id="dark">
+<link href="/static/lighttheme.css" rel="stylesheet" id="light">
+<link href="/static/wallboard-style.css" rel="stylesheet">
+
+<div class="wallboard-container">
+    {% block rack %}{% endblock %}
+</div>
+
+<script type="text/html" id="machine-template-state">
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
+</script>
+<script type="text/html" id="machine-template-allocation">
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
+</script>
+</script>
+<script type="text/html" id="machine-template-pool">
+    <a class="machine-link" href="seriallogs/<%= serverID %>-serial.txt" target="_new">
+        <span class="label <%= config.labelClass %> machine-label" style="background-color: <%= color %>">
+            <span class="glyphicon <%= config.iconClass %>"></span>
+            <%= serverNumber  %>
+        </span>
+    </a>
+</script>
+</script>
+
+<script type="text/javascript" src="/static/ZeroClipboard.js"></script>
+<script type="text/javascript" src="/realtimewebui/externals/underscore-min.js"></script>
+<script type="text/javascript" src="/realtimewebui/externals/knockout-3.3.0.js"></script>
+<script type="text/javascript" src="/realtimewebui/js/realtimewebui.js"></script>
+<script type="text/javascript" src="/static/utils.js"></script>
+<script type="text/javascript" src="/static/cookies.js"></script>
+<script>
+var wereRacksUpdated = false;
+var lotsOfColors = ["#ab47bc", "#5c6bc0", "#8d6e63", "#f44336", "#e91e63", "#9c27b0", "#3f51b5", "#2196f3", "#00bcd4", "#009688", "#4caf50", "#cddc39", "#ff9800", "#795548", "#e53935", "#d81b60", "#8e24aa", "#3949ab", "#1e88e5", "#00acc1", "#00897b", "#43a047", "#fb8c00", "#6d4c41", "#d32f2f", "#c2185b", "#7b1fa2", "#303f9f", "#1976d2", "#0097a7", "#00796b", "#388e3c", "#afb42b", "#f57c00", "#5d4037", "#c62828", "#ad1457", "#6a1b9a", "#283593", "#1565c0", "#00838f", "#00695c", "#2e7d32", "#9e9d24", "#ef6c00", "#4e342e", "#b71c1c", "#880e4f", "#4a148c", "#1a237e", "#0d47a1", "#006064", "#004d40", "#1b5e20", "#827717", "#e65100", "#3e2723", 'AliceBlue', 'AntiqueWhite', 'Aqua', 'Aquamarine', 'Azure', 'Beige', 'Bisque', 'Black', 'BlanchedAlmond', 'Blue', 'BlueViolet', 'Brown', 'BurlyWood', 'CadetBlue', 'Chartreuse', 'Chocolate', 'Coral', 'CornflowerBlue', 'Cornsilk', 'Crimson', 'Cyan', 'DarkBlue', 'DarkCyan', 'DarkGoldenRod', 'DarkGray', 'DarkGreen', 'DarkKhaki', 'DarkMagenta', 'DarkOliveGreen', 'DarkOrange', 'DarkOrchid', 'DarkRed', 'DarkSalmon', 'DarkSeaGreen', 'DarkSlateBlue', 'DarkSlateGray', 'DarkTurquoise', 'DarkViolet', 'DeepPink', 'DeepSkyBlue', 'DimGray', 'DodgerBlue', 'FireBrick', 'FloralWhite', 'ForestGreen', 'Fuchsia', 'Gainsboro', 'GhostWhite', 'Gold', 'GoldenRod', 'Gray', 'Green', 'GreenYellow', 'HoneyDew', 'HotPink', 'IndianRed', 'Indigo', 'Ivory', 'Khaki', 'Lavender', 'LavenderBlush', 'LawnGreen', 'LemonChiffon', 'LightBlue', 'LightCoral', 'LightCyan', 'LightGoldenRodYellow', 'LightGray', 'LightGreen', 'LightPink', 'LightSalmon', 'LightSeaGreen', 'LightSkyBlue', 'LightSlateGray', 'LightSteelBlue', 'LightYellow', 'Lime', 'LimeGreen', 'Linen', 'Magenta', 'Maroon', 'MediumAquaMarine', 'MediumBlue', 'MediumOrchid', 'MediumPurple', 'MediumSeaGreen', 'MediumSlateBlue', 'MediumSpringGreen', 'MediumTurquoise', 'MediumVioletRed', 'MidnightBlue', 'MintCream', 'MistyRose', 'Moccasin', 'NavajoWhite', 'Navy', 'OldLace', 'Olive', 'OliveDrab', 'Orange', 'OrangeRed', 'Orchid', 'PaleGoldenRod', 'PaleGreen', 'PaleTurquoise', 'PaleVioletRed', 'PapayaWhip', 'PeachPuff', 'Peru', 'Pink', 'Plum', 'PowderBlue', 'Purple', 'RebeccaPurple', 'Red', 'RosyBrown', 'RoyalBlue', 'SaddleBrown', 'Salmon', 'SandyBrown', 'SeaGreen', 'SeaShell', 'Sienna', 'Silver', 'SkyBlue', 'SlateBlue', 'SlateGray', 'Snow', 'SpringGreen', 'SteelBlue', 'Tan', 'Teal', 'Thistle', 'Tomato', 'Turquoise', 'Violet', 'Wheat', 'White', 'WhiteSmoke', 'Yellow', 'YellowGreen']
+var allocationColors = lotsOfColors.slice()
+var poolColors = lotsOfColors.slice()
+
+function setStatus(statusObject)
+{
+    if (!statusObject)
+        return;
+
+    if (!wereRacksUpdated) {
+        updateRacks(statusObject);
+        wereRacksUpdated = true;
+    }
+    model.pools.update(statusObject);
+    updateHosts(statusObject);
+    model.allocations.update(statusObject);
+}
+
+var hostsByIndex = {};
+var stateMap = {
+    "QUICK_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-backward", labelClass: "label-info" },
+    "SLOW_RECLAIMATION_IN_PROGRESS":{ iconClass: "glyphicon-fast-backward", labelClass: "label-warning" },
+    "CHECKED_IN":{ iconClass: "glyphicon-pause", labelClass: "label-primary" },
+    "INAUGURATION_LABEL_PROVIDED":{ iconClass: "glyphicon-play", labelClass: "label-info" },
+    "INAUGURATION_DONE":{ iconClass: "glyphicon-ok", labelClass: "label-success" },
+    "DESTROYED":{ iconClass: "glyphicon-remove", labelClass: "label-danger" },
+    "OFFLINE":{ iconClass: "glyphicon-off", labelClass: "label-default-dark" },
+    "DETACHED":{ iconClass: "glyphicon-eject", labelClass: "label-dark-red" }
+
+};
+
+function updateHosts(statusObject)
+{
+    var viewMode = model.hostListViewMode();
+    var template = _.template( $("#machine-template-" + viewMode).html() );
+    $(".machine").popover('destroy').each(function() {
+        var serverNumber = $(this).attr("id").replace(/node-rack\d+-server/, "");
+        $(this).html(template({
+            serverNumber: serverNumber,
+            serverID: $(this).attr("id"),
+            config: {
+                iconClass: "glyphicon-ban-circle",
+                labelClass: "label-default-light"
+            },
+            color: "#b9b9b9"
+        }))
+    });
+
+    for (var i in statusObject.hosts) {
+        var hostObject = statusObject.hosts[i];
+        var allocation = model.findAllocationByHostIndex(hostObject.index) || {};
+        var serverNumber = hostObject.id.replace(/rack\d+-server/, "");
+        hostsByIndex[hostObject.index] = hostObject.id;
+        var node = $("#node-" + hostObject.id);
+        var pool;
+        if ("pool" in hostObject) {
+            pool = hostObject.pool;
+        } else {
+            pool = "default";
+        }
+        var data = {
+            serverID: hostObject.id,
+            serverNumber: serverNumber,
+            config: stateMap[hostObject.state]
+        };
+        if (viewMode == "allocation") {
+            data["color"] = allocation.color;
+        } else if (viewMode == "pool") {
+            data["color"] = model.pools.getColorOfPool(pool);
+        }
+        data.color = data.color || "#777";
+
+        var nodeName = _.invert(allocation.allocated)[hostObject.index];
+        var content = hostObject.ipAddress;
+        if (nodeName) {
+            content += " (" + nodeName + ")"
+        }
+        node.html(template(data));
+        node.popover({
+            title: hostObject.id,
+            container: "body",
+            content: content,
+            trigger: "hover",
+            placement: "auto"
+        })
+    }
+}
+
+function updateRacks(statusObject) {
+    var nrHostsPerRow = 2;
+    serversByRacks = _.groupBy(statusObject.hosts, function(host) {
+        var rackNumber = parseInt(host.id.replace("rack", "").replace("-server\d", ""));
+        return rackNumber;
+    });
+    racksNumbers = Object.keys(serversByRacks);
+    orderedRackNumbers = _.sortBy(racksNumbers, function(number) {
+        return number;
+    });
+    racksTables = [];
+    // Pupulate the arrays which represent the racks' table rows
+    _.each(orderedRackNumbers, function(rackNumber) {
+        rack = {number: rackNumber, hostsRows: []};
+        racksTables.push(rack);
+        var row = [];
+        serverWithMaxNumber = _.max(serversByRacks[rackNumber], function(host) {
+            return parseInt(host.id.replace(/rack\d+-server/, ""));
+        });
+        maxServerNumber = parseInt(serverWithMaxNumber.id.replace(/rack\d+-server/, ""));
+        for (var serverNumber = 1; serverNumber <= maxServerNumber; ++serverNumber) {
+            hostElementId = "node-rack" + padWithLeadingZeros(rack.number) + "-server" +
+                padWithLeadingZeros(serverNumber);
+            row.push(hostElementId);
+            if (serverNumber % nrHostsPerRow == 0 || serverNumber == maxServerNumber) {
+                rack.hostsRows.push(row);
+                row = [];
+            }
+        }
+    });
+    model.racks(racksTables);
+}
+
+function Allocation(allocationStatus, color) {
+    var self = this;
+    self.index = allocationStatus.index;
+    self.info = allocationStatus.allocationInfo;
+    self.allocated = allocationStatus.allocated;
+    self.done = ko.observable(allocationStatus.done);
+    self.dead = ko.observable(allocationStatus.dead);
+    self.color = color;
+
+    self._getCopyCommand = function (ipAddress) {
+        var port = 2000 + parseInt(ipAddress.split(".")[3]) + (parseInt(ipAddress.split(".")[2]) - 1) * 256;
+        return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@rackattack-nat.dc1 -p " + port;
+    };
+
+    self.update = function(allocationStatus) {
+        self.done(allocationStatus.done);
+        self.dead(allocationStatus.dead);
+    };
+
+    self.applyClasses = function () {
+        if (self.dead())
+            return;
+        for (var k in self.allocated) {
+            var index = self.allocated[k];
+            var id = hostsByIndex[index];
+            var elem = $("#node-" + id);
+            elem.removeClass('machine-idle').find(".color-swatch").css({ backgroundColor: self.color });
+        }
+    };
+
+    self.countHosts = function() {
+        return Object.keys(self.allocated).length;
+    };
+
+    self.postRender = function (element, index, dataItem) {
+        if (element.nodeName == "LI") {
+            var target = element.querySelector(".copy-command");
+            var client = new ZeroClipboard(target);
+            client.on("ready", function (readyEvent) {
+                client.on("copy", function (e) {
+                    e.clipboardData.setData("text/plain", dataItem.copyCommand);
+                });
+                client.on("aftercopy", function () {
+                    var iconElement = $(target).find(".glyphicon");
+                    iconElement.removeClass("glyphicon-circle-arrow-right").addClass("glyphicon-thumbs-up");
+                    setTimeout(function () {
+                        iconElement.removeClass("glyphicon-thumbs-up").addClass("glyphicon-circle-arrow-right");
+                    }, 1000);
+                })
+            });
+        }
+    };
+
+    self.listHosts = ko.computed(function () {
+        var list = [];
+        _.each(self.allocated, function(index, nodeName) {
+            var host = _.findWhere(model.allocations.currentStatus().hosts, {"index": index });
+            list.push({
+                testName: nodeName,
+                hostName: host.id,
+                hostState: host.state,
+                ip: host.ipAddress,
+                config: stateMap[host.state],
+                copyCommand: self._getCopyCommand(host.ipAddress)
+            })
+        });
+        return _.sortBy(list, "hostName");
+    });
+
+    self.mouseOver = function (allocation, event) {
+        if (self.dead())
+            return;
+
+        $(event.target).parents("tr.allocation-row").addClass("hover");
+
+        for (var k in self.allocated) {
+            var index = self.allocated[k];
+            var id = hostsByIndex[index];
+            var elem = $("#node-" + id);
+            elem.addClass("node-when-allocation-is-hovered");
+        }
+    };
+
+    self.mouseOut = function(allocation, event) {
+        if (self.dead())
+            return;
+
+        if ($(event.target).hasClass("copy-command")) {
+            return;
+        }
+        $(event.currentTarget).removeClass("hover");
+        for (var k in self.allocated) {
+            var index = self.allocated[k];
+            var id = hostsByIndex[index];
+            var elem = $("#node-" + id);
+            elem.removeClass("node-when-allocation-is-hovered");
+        }
+    }
+}
+
+function AllocationsModel() {
+    var self = this;
+    self.allocations = ko.observableArray([]);
+    self.currentStatus = ko.observable({});
+
+    self._freeColor = function()
+    {
+        var used = _.pluck(self.allocations(), 'color');
+        return _.difference(allocationColors, used)[0];
+    };
+
+    self.update = function(statusObject)
+    {
+        self.currentStatus(statusObject);
+        var allocationIndices = {};
+        for (var i in statusObject.allocations) {
+            var allocation = statusObject.allocations[i];
+            allocationIndices[allocation.index] = true;
+            if (!_.contains(_.pluck(self.allocations(), 'index'), allocation.index)) {
+                if (!allocation.dead)
+                    self.allocations.push(new Allocation(allocation, self._freeColor()));
+            }
+            var model = _.find(self.allocations(), function(a) { return a.index == allocation.index });
+            if (allocation.dead)
+                self.allocations.remove(model);
+            else {
+                model.update(allocation);
+                model.applyClasses();
+            }
+        }
+        var copy = new Array(self.allocations());
+        for (var i in copy) {
+            var model = copy[i];
+            if (!_.contains(_.pluck(statusObject.allocations, 'index'), model.index))
+                self.allocations.remove(model);
+        }
+    };
+}
+
+function PoolsModel() {
+    var self = this;
+    self.pools = ko.observableArray();
+
+    self.update = function(statusObject)
+    {
+        _.each(statusObject.hosts, function(host) {
+            if (!("pool" in host)) {
+                host["pool"] = "default";
+            }
+        });
+        pools = _.pluck(statusObject.hosts, "pool");
+        pools = _.uniq(pools);
+        pools.sort();
+        colorsPairs = _.object(pools, poolColors);
+        colorsPairsObjects = [];
+        hostsByPools = _.groupBy(statusObject.hosts, function(host) { return host.pool; });
+        for (pool in colorsPairs) {
+            poolData = {pool: pool, color: colorsPairs[pool]};
+            poolData["nrHosts"] = hostsByPools[pool].length;
+            colorsPairsObjects.push(poolData)
+        }
+        self.pools(colorsPairsObjects);
+    };
+
+    self.getColorOfPool = function(pool) {
+        poolsColors = self.pools();
+        for (idx in poolsColors) {
+            poolColor = poolsColors[idx];
+            if (poolColor.pool == pool) {
+                return poolColor.color;
+            }
+        }
+        return undefined;
+    }
+}
+
+function Model() {
+    var self = this;
+    self.allocations = new AllocationsModel();
+    self.hostListViewMode = ko.observable("state");
+    self.racks = ko.observableArray([]);
+    theme = "dark"
+    self.theme = ko.observable(theme);
+    self.pools = new PoolsModel();
+
+    self.hostListViewMode.subscribe(function(state) {
+        updateHosts(self.allocations.currentStatus());
+    });
+
+    self.hostsStateInfo = function() {
+        return _.countBy(self.allocations.currentStatus().hosts, "state");
+    };
+
+    self.findAllocationByHostIndex = function(hostIndex) {
+        return _.find(self.allocations.allocations(), function(allocation) {
+            return _.contains(_.values(allocation.allocated), hostIndex);
+        });
+    };
+
+    self._findAllocation = function(obj) {
+        var allocationIndex = obj.getAttribute('allocationIndex');
+        for (var i in self.allocations.allocations()) {
+            var allocation = self.allocations.allocations()[i];
+            if (allocationIndex == "" + allocation.index) {
+                return allocation;
+            }
+        }
+        console.log("No such allocation");
+        return undefined;
+    };
+}
+
+
+var model = new Model();
+ko.applyBindings(model);
+
+var ui = new RealTimeWebUI();
+ui.register("status", setStatus);
+
+</script>
+
+{% endblock %}
