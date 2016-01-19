@@ -132,15 +132,29 @@
         <div class="col-md-6">
             <h3>Pools <span class="badge" data-bind="text: pools.pools().length"> </span></h3>
             <table class="table">
-                <tbody data-bind="foreach: { data: pools.pools }">
-                    <tr class="allocation-row">
+                <tbody data-bind="foreach: { data: pools.pools() }">
+                    <tr data-bind="event: { mouseenter: mouseOver, mouseleave: mouseOut }" class="allocation-row">
                         <td>
                             <div class="media">
                                 <a class="media-left pull-left" href="#">
-                                    <div class="color-swatch" data-bind="text: nrHosts, style: { backgroundColor: color }"></div>
+                                    <div class="color-swatch" data-bind="text: hosts.length, style: { backgroundColor: color }"></div>
                                 </a>
                                 <div class="media-body">
-                                    <div class="media-heading" data-bind="text: pool"> </div>
+                                    <div class="media-heading" data-bind="text: name"> </div>
+                                    <ul class="hosts-list list-group" data-bind="foreach: { data: hosts, afterAdd: postRender }">
+                                        <li class="list-group-item">
+                                            <span class="host-icon " data-bind="css: labelClass.replace('label', 'text')">
+                                                <span class="glyphicon" data-bind="css: iconClass"></span>
+                                            </span>
+                                            <span data-bind="text: id"></span>
+                                            <div class="pull-right copy-command" data-bind="if: state == 'INAUGURATION_DONE'" title="Click to copy to the clipboard a connection command to this node">
+                                                <span class="glyphicon glyphicon-circle-arrow-right connect-link" ></span>
+                                            </div>
+                                            <span class="badge">
+                                                <span data-bind="text: ipAddress"></span>
+                                            </span>
+                                        </li>
+                                    </ul>
                                 </div>
                             </div>
                         </td>
@@ -314,6 +328,25 @@ function getNatPortFromInnerIPAddress(ipAddress) {
         return 2000 + parseInt(ipAddress.split(".")[3]) + (parseInt(ipAddress.split(".")[2]) - 1) * 256;
 }
 
+function postRender(element, index, dataItem) {
+    if (element.nodeName == "LI") {
+        var target = element.querySelector(".copy-command");
+        var client = new ZeroClipboard(target);
+        client.on("ready", function (readyEvent) {
+            client.on("copy", function (e) {
+                e.clipboardData.setData("text/plain", dataItem.copyCommand);
+            });
+            client.on("aftercopy", function () {
+                var iconElement = $(target).find(".glyphicon");
+                iconElement.removeClass("glyphicon-circle-arrow-right").addClass("glyphicon-thumbs-up");
+                setTimeout(function () {
+                    iconElement.removeClass("glyphicon-thumbs-up").addClass("glyphicon-circle-arrow-right");
+                }, 1000);
+            })
+        });
+    }
+}
+
 function Allocation(allocationStatus, color) {
     var self = this;
     self.index = allocationStatus.index;
@@ -349,22 +382,7 @@ function Allocation(allocationStatus, color) {
     };
 
     self.postRender = function (element, index, dataItem) {
-        if (element.nodeName == "LI") {
-            var target = element.querySelector(".copy-command");
-            var client = new ZeroClipboard(target);
-            client.on("ready", function (readyEvent) {
-                client.on("copy", function (e) {
-                    e.clipboardData.setData("text/plain", dataItem.copyCommand);
-                });
-                client.on("aftercopy", function () {
-                    var iconElement = $(target).find(".glyphicon");
-                    iconElement.removeClass("glyphicon-circle-arrow-right").addClass("glyphicon-thumbs-up");
-                    setTimeout(function () {
-                        iconElement.removeClass("glyphicon-thumbs-up").addClass("glyphicon-circle-arrow-right");
-                    }, 1000);
-                })
-            });
-        }
+        postRender(element, index, dataItem);
     };
 
     self.listHosts = ko.computed(function () {
@@ -388,13 +406,8 @@ function Allocation(allocationStatus, color) {
             return;
 
         $(event.target).parents("tr.allocation-row").addClass("hover");
-
-        for (var k in self.allocated) {
-            var index = self.allocated[k];
-            var id = hostsByIndex[index];
-            var elem = $("#node-" + id);
-            elem.addClass("node-when-allocation-is-hovered");
-        }
+        hostsIndices = _.values(self.allocated);
+        makeHostsBlink(hostsIndices);
     };
 
     self.mouseOut = function(allocation, event) {
@@ -405,12 +418,8 @@ function Allocation(allocationStatus, color) {
             return;
         }
         $(event.currentTarget).removeClass("hover");
-        for (var k in self.allocated) {
-            var index = self.allocated[k];
-            var id = hostsByIndex[index];
-            var elem = $("#node-" + id);
-            elem.removeClass("node-when-allocation-is-hovered");
-        }
+        hostsIndices = _.values(self.allocated);
+        makeHostsStopBlinking(hostsIndices);
     }
 }
 
@@ -453,9 +462,59 @@ function AllocationsModel() {
     };
 }
 
+function makeHostsBlink(hostsIndices) {
+    hostsIndices.forEach(function(idx) {
+        var id = hostsByIndex[idx];
+        var elem = $("#node-" + id);
+        elem.addClass("node-when-allocation-is-hovered");
+    });
+}
+
+function makeHostsStopBlinking(hostsIndices) {
+    hostsIndices.forEach(function(idx) {
+        var id = hostsByIndex[idx];
+        var elem = $("#node-" + id);
+        elem.removeClass("node-when-allocation-is-hovered");
+    });
+}
+
+function Pool(poolName, hosts, color)
+{
+    var self = this;
+    self.name = poolName;
+    self.hosts = hosts;
+    self.color = color;
+
+    self.mouseOver = function(pool, event) {
+        $(event.target).parents("tr.allocation-row").addClass("hover");
+        hostsIndices = _.pluck(self.hosts, "index");
+        makeHostsBlink(hostsIndices)
+    };
+
+    self.mouseOut = function(pool, event) {
+        $(event.currentTarget).removeClass("hover");
+        hostsIndices = _.pluck(self.hosts, "index");
+        makeHostsStopBlinking(hostsIndices)
+    };
+
+    self.postRender = function (element, index, dataItem) {
+        postRender(element, index, dataItem);
+    };
+}
+
 function PoolsModel() {
     var self = this;
     self.pools = ko.observableArray();
+
+    self.addLabelClass = function(hosts, statusObject) {
+        for (idx in hosts) {
+            console.log(hosts[idx]);
+            host = hosts[idx];
+            host["iconClass"] = stateMap[host.state]["iconClass"];
+            host["labelClass"] = stateMap[host.state]["labelClass"];
+            console.log(hosts[idx]);
+        }
+    }
 
     self.update = function(statusObject)
     {
@@ -464,29 +523,27 @@ function PoolsModel() {
                 host["pool"] = "default";
             }
         });
-        pools = _.pluck(statusObject.hosts, "pool");
-        pools = _.uniq(pools);
-        pools.sort();
-        colorsPairs = _.object(pools, poolColors);
-        colorsPairsObjects = [];
-        hostsByPools = _.groupBy(statusObject.hosts, function(host) { return host.pool; });
-        for (pool in colorsPairs) {
-            poolData = {pool: pool, color: colorsPairs[pool]};
-            poolData["nrHosts"] = hostsByPools[pool].length;
-            colorsPairsObjects.push(poolData)
+        poolsNames = _.pluck(statusObject.hosts, "pool");
+        poolsNames = _.uniq(poolsNames);
+        poolsNames.sort();
+        colorsPairs = _.object(poolsNames, poolColors);
+        pools = [];
+        for (poolName in colorsPairs) {
+            hostsByPools = _.groupBy(statusObject.hosts, function(host) { return host.pool; });
+            hostsInPool = hostsByPools[poolName];
+            self.addLabelClass(hostsInPool);
+            pool = new Pool(poolName, hostsInPool, colorsPairs[poolName]);
+            pools.push(pool)
         }
-        self.pools(colorsPairsObjects);
+        self.pools(pools);
     };
 
-    self.getColorOfPool = function(pool) {
-        poolsColors = self.pools();
-        for (idx in poolsColors) {
-            poolColor = poolsColors[idx];
-            if (poolColor.pool == pool) {
-                return poolColor.color;
-            }
+    self.getColorOfPool = function(poolName) {
+        pool = _.find(model.pools.pools(), function(pool) { return pool.name == poolName } );
+        if (pool === undefined) {
+            return "#b9b9b9";
         }
-        return undefined;
+        return pool.color;
     }
 }
 
