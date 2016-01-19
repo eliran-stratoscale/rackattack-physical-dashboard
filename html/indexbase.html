@@ -86,6 +86,7 @@
                     <tr>
                         <th>Allocation</th>
                         <th>State</th>
+                        <th>Duration</th>
                     </tr>
                 </thead>
                 <tbody data-bind="foreach: { data: allocations.allocations }">
@@ -124,6 +125,8 @@
                             <div data-bind="if: ! dead() && ! done()">
                                 <span class="label label-primary" > WAIT </span>
                             </div>
+                        </td>
+                        <td class="duration" data-bind="text: duration">
                         </td>
                     </tr>
                 </tbody>
@@ -355,15 +358,39 @@ function Allocation(allocationStatus, color) {
     self.done = ko.observable(allocationStatus.done);
     self.dead = ko.observable(allocationStatus.dead);
     self.color = color;
+    self.duration = ko.observable("N/A");
+    if ("duration" in allocationStatus) {
+        self.duration(allocationStatus.duration);
+    }
 
     self._getCopyCommand = function (ipAddress) {
         var port = getNatPortFromInnerIPAddress(ipAddress);
         return "sshpass -p rackattack ssh -o ServerAliveInterval=5 -o ServerAliveCountMax=1 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null root@" + NAT_ADDR + " -p " + port;
     };
 
+    self.getPrettyDuration = function(duration) {
+        nrSeconds = parseInt(duration);
+        nrMinutes = Math.round(nrSeconds / 60);
+        if (nrMinutes == 0) {
+            return "1 min";
+        }
+        if (nrMinutes < 60) {
+            return nrMinutes + " min";
+        }
+        nrHours = Math.round(nrMinutes / 60);
+        if (nrHours < 24) {
+            return nrHours + " hr";
+        }
+        nrDays = Math.round(nrHours / 24);
+        return nrDays + " days";
+    };
+
     self.update = function(allocationStatus) {
         self.done(allocationStatus.done);
         self.dead(allocationStatus.dead);
+        if ("duration" in allocationStatus) {
+            self.duration(self.getPrettyDuration(allocationStatus.duration));
+        }
     };
 
     self.applyClasses = function () {
