@@ -27,7 +27,7 @@
 
 @keyframes blinker {  
     from { background-color: white; }
-    to { background-color: inherit; }
+    to { background-color: black; }
 }
 
 @-webkit-keyframes blinker {
