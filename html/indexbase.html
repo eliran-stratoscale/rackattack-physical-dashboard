@@ -370,19 +370,29 @@ function Allocation(allocationStatus, color) {
 
     self.getPrettyDuration = function(duration) {
         nrSeconds = parseInt(duration);
-        nrMinutes = Math.round(nrSeconds / 60);
+        nrMinutes = Math.floor(nrSeconds / 60);
         if (nrMinutes == 0) {
-            return "1 min";
+            nrMinutes = 1;
         }
         if (nrMinutes < 60) {
-            return nrMinutes + " min";
+            return nrMinutes + "m";
         }
-        nrHours = Math.round(nrMinutes / 60);
+        nrHours = Math.floor(nrMinutes / 60);
         if (nrHours < 24) {
-            return nrHours + " hr";
+            result = nrHours + "h";
+            nrMinutesResidue = nrMinutes % 60;
+            if (nrMinutesResidue > 0) {
+                result += " " + nrMinutesResidue + "m";
+            }
+            return result;
         }
-        nrDays = Math.round(nrHours / 24);
-        return nrDays + " days";
+        nrHoursResidue = nrHours % 24;
+        nrDays = Math.floor(nrHours / 24);
+        result = nrDays + "d";
+        if (nrHoursResidue > 0) {
+            result += " " + nrHoursResidue + "h";
+        }
+        return result;
     };
 
     self.update = function(allocationStatus) {
